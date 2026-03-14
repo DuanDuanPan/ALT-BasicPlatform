@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UX Design Directions - 4- 基础底座</title>
+  <style>
+    :root {
+      --bg-page: #f4f7fb;
+      --bg-panel: #ffffff;
+      --bg-soft: #eef2f8;
+      --text-strong: #1a2238;
+      --text-muted: #647089;
+      --line: #d8e0ee;
+      --brand: #1d39c4;
+      --brand-soft: #dfe5ff;
+      --success: #389e0d;
+      --warning: #d46b08;
+      --danger: #cf1322;
+      --shadow: 0 18px 42px rgba(28, 41, 74, 0.08);
+      --radius: 18px;
+      --frame-width: 100%;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(29, 57, 196, 0.08), transparent 30%),
+        linear-gradient(180deg, #f7f9fd 0%, #eef3f8 100%);
+      color: var(--text-strong);
+    }
+
+    body[data-device="desktop"] {
+      --frame-width: 100%;
+    }
+
+    body[data-device="tablet"] {
+      --frame-width: 76%;
+    }
+
+    body[data-device="mobile"] {
+      --frame-width: 46%;
+    }
+
+    .page {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 32px 24px 48px;
+    }
+
+    .hero {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: 1.3fr 0.7fr;
+      align-items: start;
+      margin-bottom: 24px;
+    }
+
+    .hero-card,
+    .compare-panel,
+    .direction-card {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(216, 224, 238, 0.9);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .hero-card {
+      padding: 28px;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--brand-soft);
+      color: var(--brand);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .title {
+      margin-top: 14px;
+      font-size: 38px;
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+    }
+
+    .subtitle {
+      margin-top: 12px;
+      color: var(--text-muted);
+      font-size: 15px;
+      line-height: 1.7;
+      max-width: 720px;
+    }
+
+    .hero-list {
+      margin-top: 18px;
+      padding-left: 18px;
+      color: var(--text-muted);
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    .selection-note {
+      padding: 22px 24px;
+    }
+
+    .selection-note h2 {
+      font-size: 18px;
+      margin-bottom: 12px;
+    }
+
+    .note-grid {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: #f5f7fa;
+      border: 1px solid var(--line);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-strong);
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .device-toggle,
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .device-toggle button {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: 180ms ease;
+    }
+
+    .device-toggle button.active {
+      background: var(--brand);
+      border-color: var(--brand);
+      color: #fff;
+      box-shadow: 0 10px 24px rgba(29, 57, 196, 0.22);
+    }
+
+    .compare-panel {
+      margin-bottom: 22px;
+      padding: 22px 24px;
+    }
+
+    .compare-panel h2 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .compare-panel p {
+      color: var(--text-muted);
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .compare-empty {
+      padding: 14px 16px;
+      margin-top: 16px;
+      background: #f8fafc;
+      border: 1px dashed var(--line);
+      border-radius: 14px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      overflow: hidden;
+      border-radius: 14px;
+      background: #fff;
+    }
+
+    .compare-table th,
+    .compare-table td {
+      border-bottom: 1px solid #edf1f7;
+      padding: 12px 14px;
+      text-align: left;
+      font-size: 13px;
+      vertical-align: top;
+    }
+
+    .compare-table th {
+      background: #f6f8fb;
+      color: var(--text-strong);
+      font-size: 12px;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .directions-grid {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .direction-card {
+      padding: 20px;
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+    }
+
+    .direction-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 24px 46px rgba(28, 41, 74, 0.12);
+      border-color: rgba(29, 57, 196, 0.25);
+    }
+
+    .direction-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .direction-meta {
+      display: grid;
+      gap: 8px;
+    }
+
+    .direction-meta h3 {
+      font-size: 20px;
+      line-height: 1.2;
+    }
+
+    .direction-meta p {
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .compare-check {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .tag {
+      border-radius: 999px;
+      background: #f5f7fa;
+      border: 1px solid var(--line);
+      color: var(--text-muted);
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .preview-frame {
+      width: var(--frame-width);
+      min-height: 280px;
+      margin: 0 auto 16px;
+      padding: 10px;
+      border-radius: 18px;
+      border: 1px solid #dbe3f0;
+      background: linear-gradient(180deg, #f8fbff 0%, #eef3f7 100%);
+      transition: width 220ms ease;
+    }
+
+    .preview-shell {
+      height: 260px;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid rgba(213, 221, 233, 0.95);
+      background: #fff;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+
+    .micro-label {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .success { background: rgba(56, 158, 13, 0.12); color: var(--success); }
+    .warning { background: rgba(212, 107, 8, 0.12); color: var(--warning); }
+    .danger { background: rgba(207, 19, 34, 0.12); color: var(--danger); }
+    .brand { background: rgba(29, 57, 196, 0.12); color: var(--brand); }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .stats div {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: #f7f9fc;
+      border: 1px solid #e7edf6;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .stats strong {
+      display: block;
+      color: var(--text-strong);
+      font-size: 16px;
+      margin-top: 4px;
+    }
+
+    .direction-notes {
+      display: grid;
+      gap: 8px;
+      color: var(--text-muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .direction-notes strong {
+      color: var(--text-strong);
+    }
+
+    .ide-shell {
+      display: grid;
+      grid-template-columns: 18% 1fr 24%;
+      background: #f6f8fb;
+    }
+
+    .ide-left,
+    .ide-right {
+      background: #fbfcfe;
+      border-right: 1px solid #e2e8f2;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .ide-right {
+      border-left: 1px solid #e2e8f2;
+      border-right: none;
+      background: #ffffff;
+    }
+
+    .ide-center {
+      position: relative;
+      padding: 14px;
+      background:
+        linear-gradient(rgba(223, 229, 240, 0.6) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(223, 229, 240, 0.6) 1px, transparent 1px);
+      background-size: 22px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      flex-direction: column;
+    }
+
+    .node {
+      width: 110px;
+      border-radius: 10px;
+      border: 1px solid #cfd8eb;
+      background: #fff;
+      padding: 10px 8px;
+      text-align: center;
+      font-size: 11px;
+      box-shadow: 0 10px 24px rgba(34, 47, 80, 0.08);
+    }
+
+    .node-line {
+      width: 3px;
+      height: 24px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, var(--brand), #9db2ff);
+    }
+
+    .immersive-shell {
+      position: relative;
+      background:
+        radial-gradient(circle at top right, rgba(29, 57, 196, 0.16), transparent 24%),
+        linear-gradient(180deg, #eef4ff 0%, #ecf2f7 100%);
+    }
+
+    .floating-bar,
+    .floating-tools,
+    .floating-node {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(219, 227, 240, 0.9);
+      border-radius: 14px;
+      box-shadow: 0 16px 28px rgba(29, 42, 77, 0.12);
+    }
+
+    .floating-bar {
+      top: 14px;
+      left: 14px;
+      right: 14px;
+      height: 42px;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .floating-tools {
+      top: 68px;
+      left: 14px;
+      width: 52px;
+      padding: 8px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .floating-tools div {
+      height: 34px;
+      border-radius: 10px;
+      background: #f3f6fa;
+      border: 1px solid #e2e8f2;
+    }
+
+    .floating-node {
+      right: 20px;
+      bottom: 18px;
+      width: 150px;
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .governance-shell {
+      display: grid;
+      grid-template-columns: 1fr 30%;
+      background: #f8fafc;
+    }
+
+    .rule-table {
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+      background: #fff;
+      border-right: 1px solid #e2e8f2;
+    }
+
+    .rule-row,
+    .audit-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 8px;
+      padding: 10px;
+      border: 1px solid #e7edf6;
+      border-radius: 10px;
+      background: #fbfcfe;
+      font-size: 11px;
+      align-items: center;
+    }
+
+    .rule-panel {
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .assembly-shell {
+      padding: 12px;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 10px;
+      background: #fff;
+    }
+
+    .step-rail {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .step-card {
+      padding: 10px;
+      border-radius: 12px;
+      border: 1px solid #dfe7f4;
+      background: #f8faff;
+      font-size: 11px;
+    }
+
+    .assembly-main {
+      display: grid;
+      grid-template-columns: 1fr 0.76fr;
+      gap: 10px;
+    }
+
+    .assembly-box {
+      border: 1px solid #e4ebf4;
+      border-radius: 12px;
+      padding: 12px;
+      background: #fafcff;
+      display: grid;
+      gap: 8px;
+    }
+
+    .mission-shell {
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      gap: 10px;
+      padding: 12px;
+      background: linear-gradient(180deg, #fbfcff 0%, #f4f7fb 100%);
+    }
+
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .metric {
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid #e2e8f3;
+      background: #fff;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 18px;
+      color: var(--text-strong);
+      margin-top: 4px;
+    }
+
+    .mission-body {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 10px;
+    }
+
+    .mission-graph,
+    .mission-alerts,
+    .ledger-list,
+    .ledger-preview,
+    .ledger-actions {
+      border: 1px solid #e3e9f3;
+      border-radius: 12px;
+      background: #fff;
+      padding: 12px;
+    }
+
+    .ledger-shell {
+      display: grid;
+      grid-template-columns: 22% 1fr 28%;
+      gap: 0;
+      background: #f7f9fc;
+    }
+
+    .ledger-list {
+      border-radius: 0;
+      border-right: 1px solid #e3e9f3;
+      border-left: none;
+      border-top: none;
+      border-bottom: none;
+      background: #fbfcfe;
+    }
+
+    .ledger-preview {
+      border-radius: 0;
+      border-top: none;
+      border-bottom: none;
+    }
+
+    .ledger-actions {
+      border-radius: 0;
+      border-left: 1px solid #e3e9f3;
+      border-top: none;
+      border-right: none;
+      border-bottom: none;
+      background: #fffdf8;
+    }
+
+    .mini-stack {
+      display: grid;
+      gap: 8px;
+    }
+
+    .mini-line {
+      height: 10px;
+      border-radius: 999px;
+      background: #edf2f7;
+    }
+
+    .mini-line.short { width: 58%; }
+    .mini-line.mid { width: 76%; }
+    .mini-line.long { width: 92%; }
+
+    .list-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    @media (max-width: 1080px) {
+      .hero,
+      .directions-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body data-device="desktop">
+  <div class="page">
+    <section class="hero">
+      <div class="hero-card">
+        <span class="eyebrow">BMAD Step 9 Deliverable</span>
+        <h1 class="title">数字化验收平台设计方向对比台</h1>
+        <p class="subtitle">
+          这里不是单纯展示“好看界面”，而是把 4- 基础底座的六种布局和交互方向拉到同一张桌面上比较：
+          哪种更适合建模、装配、发布、运行、追溯和卷宗工作台，哪种会让高密度 B 端页面失控，哪种适合成为全局壳层。
+        </p>
+        <ul class="hero-list">
+          <li>支持 6 个方向的完整结构预览，而不是只看一个推荐稿。</li>
+          <li>支持桌面 / 平板 / 移动宽度切换，验证信息密度收缩效果。</li>
+          <li>支持勾选方向进行对比，快速看出布局、监控能力和实施复杂度差异。</li>
+        </ul>
+      </div>
+
+      <div class="hero-card selection-note">
+        <h2>当前推荐结论</h2>
+        <p class="subtitle" style="margin-top:0">
+          全局采用 <strong>Direction 1: IDE Layout</strong> 作为统一工作台骨架。
+          Page 09 借用 Direction 4 的阶段推进语言，Page 10 / 12 借用 Direction 5 的态势表达，Page 11 借用 Direction 6 的卷宗工作区语义。
+        </p>
+        <div class="note-grid">
+          <span class="pill">全局壳层: Direction 1</span>
+          <span class="pill">运行态增强: Direction 5</span>
+          <span class="pill">卷宗工作区: Direction 6</span>
+          <span class="pill">装配预演语言: Direction 4</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="controls">
+      <div class="device-toggle" aria-label="设备宽度预览">
+        <button class="active" data-device="desktop" type="button">Desktop 1440</button>
+        <button data-device="tablet" type="button">Tablet 1024</button>
+        <button data-device="mobile" type="button">Mobile 430</button>
+      </div>
+      <div class="legend">
+        <span class="tag">高密度工作台</span>
+        <span class="tag">可比对</span>
+        <span class="tag">响应式预览</span>
+        <span class="tag">交互方向选择</span>
+      </div>
+    </section>
+
+    <section class="compare-panel">
+      <h2>方向对比面板</h2>
+      <p>
+        勾选下方方向卡右上角的“加入对比”，系统会在这里生成并排比较表，帮助判断哪个方向适合作为全局骨架，哪个更适合局部页面语言。
+      </p>
+      <div id="compare-output" class="compare-empty">尚未选择对比方向。建议先勾选 Direction 1、4、5、6 进行比较。</div>
+    </section>
+
+    <section class="directions-grid">
+      <article class="direction-card">
+        <div class="direction-top">
+          <div class="direction-meta">
+            <span class="eyebrow">Direction 1</span>
+            <h3>The IDE Layout</h3>
+            <p>三栏工作台，适合建模、装配、治理和任何需要“选件 + 编辑 + 检查”的专业操作面。</p>
+          </div>
+          <label class="compare-check"><input type="checkbox" data-compare="dir1"> 加入对比</label>
+        </div>
+        <div class="tag-row">
+          <span class="tag">Recommended Shell</span>
+          <span class="tag">High Density</span>
+          <span class="tag">Best For Page 02-08</span>
+        </div>
+        <div class="preview-frame">
+          <div class="preview-shell ide-shell">
+            <div class="ide-left">
+              <span class="micro-label brand">资源树</span>
+              <div class="mini-line long"></div>
+              <div class="mini-line mid"></div>
+              <div class="mini-line short"></div>
+              <div class="mini-line mid"></div>
+              <span class="micro-label warning">批次 A-17</span>
+            </div>
+            <div class="ide-center">
+              <div class="node">ITP A-17</div>
+              <div class="node-line"></div>
+              <div class="node">Evidence Pack</div>
+              <div class="node-line"></div>
+              <div class="node">PDM / MES</div>
+            </div>
+            <div class="ide-right">
+              <span class="micro-label success">依赖已满足</span>
+              <div class="mini-stack">
+                <div class="mini-line long"></div>
+                <div class="mini-line mid"></div>
+                <div class="mini-line short"></div>
+              </div>
+              <span class="micro-label brand">Drawer Inspector</span>
+            </div>
+          </div>
+        </div>
+        <div class="stats">
+          <div>布局直觉性<strong>高</strong></div>
+          <div>实施复杂度<strong>中</strong></div>
+          <div>表单承载<strong>高</strong></div>
+          <div>运行监控<strong>中</strong></div>
+        </div>
+        <div class="direction-notes">
+          <div><strong>优势:</strong> 资源选择、主作业区和检查面板天然分层，最符合“模型化工作台”心智。</div>
+          <div><strong>风险:</strong> 如果视觉节奏处理不好，容易显得僵硬；需要通过 Mission Board 语言增强运行态页面。</div>
+        </div>
+      </article>
+
+      <article class="direction-card">
+        <div class="direction-top">
+          <div class="direction-meta">
+            <span class="eyebrow">Direction 2</span>
+            <h3>The Immersive Canvas</h3>
+            <p>最大化图谱区域，把工具和属性都做成浮层，适合深度拓扑操作和沉浸式监控。</p>
+          </div>
+          <label class="compare-check"><input type="checkbox" data-compare="dir2"> 加入对比</label>
+        </div>
+        <div class="tag-row">
+          <span class="tag">Canvas First</span>
+          <span class="tag">Visual Focus</span>
+          <span class="tag">Weak for Dense Forms</span>
+        </div>
+        <div class="preview-frame">
+          <div class="preview-shell immersive-shell">
+            <div class="floating-bar">
+              <span class="micro-label brand">Focus Mode</span>
+              <span class="micro-label warning">2 Alerts</span>
+            </div>
+            <div class="floating-tools">
+              <div></div>
+              <div></div>
+              <div></div>
+            </div>
+            <div class="floating-node">
+              <span class="micro-label success">Graph Healthy</span>
+              <div class="mini-line long"></div>
+              <div class="mini-line mid"></div>
+            </div>
+          </div>
+        </div>
+        <div class="stats">
+          <div>布局直觉性<strong>中</strong></div>
+          <div>实施复杂度<strong>高</strong></div>
+          <div>表单承载<strong>低</strong></div>
+          <div>运行监控<strong>高</strong></div>
+        </div>
+        <div class="direction-notes">
+          <div><strong>优势:</strong> 大图谱和关系探索非常出色，适合追溯和图关系聚焦场景。</div>
+          <div><strong>风险:</strong> 治理配置、卷宗审核、密级检查等高密度表单场景会显著失衡。</div>
+        </div>
+      </article>
+
+      <article class="direction-card">
+        <div class="direction-top">
+          <div class="direction-meta">
+            <span class="eyebrow">Direction 3</span>
+            <h3>The Dense Governance Desk</h3>
+            <p>以规则、矩阵、校验项和审计解释为中心的桌面，适合治理建模、发布门禁和例外审批。</p>
+          </div>
+          <label class="compare-check"><input type="checkbox" data-compare="dir3"> 加入对比</label>
+        </div>
+        <div class="tag-row">
+          <span class="tag">Governance Heavy</span>
+          <span class="tag">Table First</span>
+          <span class="tag">Best For Page 07 / 09</span>
+        </div>
+        <div class="preview-frame">
+          <div class="preview-shell governance-shell">
+            <div class="rule-table">
+              <span class="micro-label brand">发布门禁</span>
+              <div class="rule-row"><span>密级穿透校验</span><span class="micro-label success">通过</span><span>4s</span></div>
+              <div class="rule-row"><span>Trace 注册检查</span><span class="micro-label warning">待修复</span><span>2 链路</span></div>
+              <div class="rule-row"><span>回滚粒度检查</span><span class="micro-label success">通过</span><span>模块级</span></div>
+              <div class="audit-row"><span>审计策略</span><span>WORM</span><span>已锁定</span></div>
+            </div>
+            <div class="rule-panel">
+              <span class="micro-label warning">Blocked Item</span>
+              <div class="mini-line long"></div>
+              <div class="mini-line mid"></div>
+              <div class="mini-line short"></div>
+              <span class="micro-label danger">需补充密级策略</span>
+            </div>
+          </div>
+        </div>
+        <div class="stats">
+          <div>布局直觉性<strong>中高</strong></div>
+          <div>实施复杂度<strong>中</strong></div>
+          <div>表单承载<strong>高</strong></div>
+          <div>运行监控<strong>低</strong></div>
+        </div>
+        <div class="direction-notes">
+          <div><strong>优势:</strong> 规则、审批和审计信息非常清晰，适合高风险治理页面。</div>
+          <div><strong>风险:</strong> 不适合作为全局壳层，否则会让装配与追溯页面失去空间感。</div>
+        </div>
+      </article>
+
+      <article class="direction-card">
+        <div class="direction-top">
+          <div class="direction-meta">
+            <span class="eyebrow">Direction 4</span>
+            <h3>The Guided Assembly Line</h3>
+            <p>围绕步骤推进、依赖阻断和预演节奏构建的“装配流水线”体验，适合 Page 08 / 09。</p>
+          </div>
+          <label class="compare-check"><input type="checkbox" data-compare="dir4"> 加入对比</label>
+        </div>
+        <div class="tag-row">
+          <span class="tag">Step Driven</span>
+          <span class="tag">Release Ready</span>
+          <span class="tag">Best For Page 08 / 09</span>
+        </div>
+        <div class="preview-frame">
+          <div class="preview-shell assembly-shell">
+            <div class="step-rail">
+              <div class="step-card">1 基线</div>
+              <div class="step-card">2 ITP</div>
+              <div class="step-card">3 连接器</div>
+              <div class="step-card">4 预演</div>
+            </div>
+            <div class="list-chips">
+              <span class="micro-label success">已满足 9/11</span>
+              <span class="micro-label warning">2 个阻断</span>
+              <span class="micro-label brand">回滚模块级</span>
+            </div>
+            <div class="assembly-main">
+              <div class="assembly-box">
+                <div class="mini-line long"></div>
+                <div class="mini-line mid"></div>
+                <div class="mini-line short"></div>
+              </div>
+              <div class="assembly-box">
+                <span class="micro-label danger">缺少涉密通道</span>
+                <div class="mini-line mid"></div>
+                <div class="mini-line short"></div>
+              </div>
+            </div>
+            <div class="list-chips">
+              <span class="micro-label brand">执行预演</span>
+              <span class="micro-label warning">查看修复锚点</span>
+            </div>
+          </div>
+        </div>
+        <div class="stats">
+          <div>布局直觉性<strong>高</strong></div>
+          <div>实施复杂度<strong>中</strong></div>
+          <div>表单承载<strong>中高</strong></div>
+          <div>运行监控<strong>中</strong></div>
+        </div>
+        <div class="direction-notes">
+          <div><strong>优势:</strong> 阻断、预演、回滚决策特别清楚，适合把复杂门禁变成阶段任务。</div>
+          <div><strong>风险:</strong> 不适合全局常驻使用，否则会压缩自由探索和批量调整空间。</div>
+        </div>
+      </article>
+
+      <article class="direction-card">
+        <div class="direction-top">
+          <div class="direction-meta">
+            <span class="eyebrow">Direction 5</span>
+            <h3>The Mission Control Board</h3>
+            <p>把运行态、风险、告警、追溯和 KPI 汇聚成任务指挥台，适合 Page 10 / 12。</p>
+          </div>
+          <label class="compare-check"><input type="checkbox" data-compare="dir5"> 加入对比</label>
+        </div>
+        <div class="tag-row">
+          <span class="tag">Runtime Heavy</span>
+          <span class="tag">Alert First</span>
+          <span class="tag">Best For Page 10 / 12</span>
+        </div>
+        <div class="preview-frame">
+          <div class="preview-shell mission-shell">
+            <div class="list-chips">
+              <span class="micro-label brand">HJ-2403 / A-17</span>
+              <span class="micro-label warning">3 条预警</span>
+              <span class="micro-label success">7 条主线健康</span>
+            </div>
+            <div class="metrics-row">
+              <div class="metric">执行中任务<strong>18</strong></div>
+              <div class="metric">阻断项<strong>2</strong></div>
+              <div class="metric">卷宗完成<strong>91%</strong></div>
+              <div class="metric">连接器健康<strong>97%</strong></div>
+            </div>
+            <div class="mission-body">
+              <div class="mission-graph">
+                <span class="micro-label brand">主线图谱</span>
+                <div class="mini-line long"></div>
+                <div class="mini-line long"></div>
+                <div class="mini-line mid"></div>
+              </div>
+              <div class="mission-alerts">
+                <span class="micro-label danger">异常预警</span>
+                <div class="mini-stack">
+                  <div class="mini-line long"></div>
+                  <div class="mini-line mid"></div>
+                  <div class="mini-line short"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="stats">
+          <div>布局直觉性<strong>高</strong></div>
+          <div>实施复杂度<strong>中高</strong></div>
+          <div>表单承载<strong>中</strong></div>
+          <div>运行监控<strong>高</strong></div>
+        </div>
+        <div class="direction-notes">
+          <div><strong>优势:</strong> 异常和健康度的感知最强，适合运行态指挥和追溯入口聚合。</div>
+          <div><strong>风险:</strong> 如果直接套用到建模页，会削弱资产编辑的秩序感。</div>
+        </div>
+      </article>
+
+      <article class="direction-card">
+        <div class="direction-top">
+          <div class="direction-meta">
+            <span class="eyebrow">Direction 6</span>
+            <h3>The Evidence Ledger Workspace</h3>
+            <p>像“案卷台 + 工作底稿”一样组织证据、替换审批和电子卷宗内容，适合 Page 11。</p>
+          </div>
+          <label class="compare-check"><input type="checkbox" data-compare="dir6"> 加入对比</label>
+        </div>
+        <div class="tag-row">
+          <span class="tag">Document Heavy</span>
+          <span class="tag">Evidence First</span>
+          <span class="tag">Best For Page 11</span>
+        </div>
+        <div class="preview-frame">
+          <div class="preview-shell ledger-shell">
+            <div class="ledger-list">
+              <span class="micro-label brand">资料分类</span>
+              <div class="mini-line long"></div>
+              <div class="mini-line mid"></div>
+              <div class="mini-line short"></div>
+              <span class="micro-label warning">2 项待替换</span>
+            </div>
+            <div class="ledger-preview">
+              <span class="micro-label success">电子卷宗预览</span>
+              <div class="mini-line long"></div>
+              <div class="mini-line long"></div>
+              <div class="mini-line mid"></div>
+              <div class="mini-line short"></div>
+            </div>
+            <div class="ledger-actions">
+              <span class="micro-label danger">完整性缺口</span>
+              <div class="mini-line long"></div>
+              <div class="mini-line mid"></div>
+              <span class="micro-label brand">替换审批</span>
+            </div>
+          </div>
+        </div>
+        <div class="stats">
+          <div>布局直觉性<strong>高</strong></div>
+          <div>实施复杂度<strong>中</strong></div>
+          <div>表单承载<strong>中高</strong></div>
+          <div>运行监控<strong>低</strong></div>
+        </div>
+        <div class="direction-notes">
+          <div><strong>优势:</strong> 文档、版本和审批状态并排可见，非常适合卷宗生成和归档前检查。</div>
+          <div><strong>风险:</strong> 不适合对象建模和画布装配，但很适合做 Page 11 的专属语言。</div>
+        </div>
+      </article>
+    </section>
+  </div>
+
+  <script>
+    const comparisonData = {
+      dir1: {
+        name: "Direction 1 / IDE Layout",
+        shell: "全局默认壳层",
+        density: "高",
+        monitoring: "中",
+        implementation: "中",
+        bestFor: "Page 02-08 建模、装配、治理",
+        risk: "若无视觉变化，运行态可能显得偏静态"
+      },
+      dir2: {
+        name: "Direction 2 / Immersive Canvas",
+        shell: "不建议全局使用",
+        density: "中低",
+        monitoring: "高",
+        implementation: "高",
+        bestFor: "深度图谱浏览、局部 focus mode",
+        risk: "难承载高密度表单与审批信息"
+      },
+      dir3: {
+        name: "Direction 3 / Dense Governance Desk",
+        shell: "治理页专用",
+        density: "高",
+        monitoring: "低",
+        implementation: "中",
+        bestFor: "Page 07 / 09 规则、审计、门禁",
+        risk: "空间感不足，不适合图谱和装配主界面"
+      },
+      dir4: {
+        name: "Direction 4 / Guided Assembly Line",
+        shell: "装配/预演子模式",
+        density: "中高",
+        monitoring: "中",
+        implementation: "中",
+        bestFor: "Page 08 / 09 步骤推进与阻断修复",
+        risk: "长期使用会压缩用户自由探索空间"
+      },
+      dir5: {
+        name: "Direction 5 / Mission Control Board",
+        shell: "运行态增强模式",
+        density: "中",
+        monitoring: "高",
+        implementation: "中高",
+        bestFor: "Page 10 / 12 主控台、态势、预警",
+        risk: "若直接套给建模页，会削弱编辑秩序"
+      },
+      dir6: {
+        name: "Direction 6 / Evidence Ledger Workspace",
+        shell: "卷宗页专用语言",
+        density: "中高",
+        monitoring: "低",
+        implementation: "中",
+        bestFor: "Page 11 证据包、卷宗、归档",
+        risk: "无法替代图谱型页面的空间表达"
+      }
+    };
+
+    const output = document.getElementById("compare-output");
+    const compareBoxes = Array.from(document.querySelectorAll("input[data-compare]"));
+    const deviceButtons = Array.from(document.querySelectorAll("button[data-device]"));
+
+    function renderComparison() {
+      const selected = compareBoxes.filter((box) => box.checked).map((box) => comparisonData[box.dataset.compare]);
+      if (!selected.length) {
+        output.className = "compare-empty";
+        output.innerHTML = "尚未选择对比方向。建议先勾选 Direction 1、4、5、6 进行比较。";
+        return;
+      }
+
+      const rows = [
+        ["定位", "shell"],
+        ["信息密度", "density"],
+        ["运行监控能力", "monitoring"],
+        ["实施复杂度", "implementation"],
+        ["最适合页面", "bestFor"],
+        ["主要风险", "risk"]
+      ];
+
+      const header = selected.map((item) => `<th>${item.name}</th>`).join("");
+      const body = rows.map(([label, key]) => {
+        const cells = selected.map((item) => `<td>${item[key]}</td>`).join("");
+        return `<tr><th>${label}</th>${cells}</tr>`;
+      }).join("");
+
+      output.className = "";
+      output.innerHTML = `
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th>维度</th>
+              ${header}
+            </tr>
+          </thead>
+          <tbody>
+            ${body}
+          </tbody>
+        </table>
+      `;
+    }
+
+    compareBoxes.forEach((box) => {
+      box.addEventListener("change", renderComparison);
+    });
+
+    deviceButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        document.body.dataset.device = button.dataset.device;
+        deviceButtons.forEach((item) => item.classList.remove("active"));
+        button.classList.add("active");
+      });
+    });
+
+    renderComparison();
+  </script>
+</body>
+</html>

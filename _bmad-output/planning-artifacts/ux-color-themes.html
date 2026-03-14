@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UX Color Themes - 4- 基础底座</title>
+  <style>
+    :root {
+      --color-primary: #1d39c4;
+      --color-primary-soft: #dfe5ff;
+      --color-page: #f5f7fa;
+      --color-surface: #ffffff;
+      --color-surface-muted: #f7f9fc;
+      --color-border: #d9d9d9;
+      --color-text: #141414;
+      --color-text-muted: #595959;
+      --color-success: #389e0d;
+      --color-warning: #d46b08;
+      --color-danger: #cf1322;
+      --color-accent: #274796;
+      --shadow: 0 18px 38px rgba(21, 31, 59, 0.1);
+      --radius: 18px;
+      --panel-radius: 14px;
+      --font: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: var(--font);
+      color: var(--color-text);
+      background:
+        radial-gradient(circle at top left, color-mix(in srgb, var(--color-primary) 8%, transparent), transparent 28%),
+        linear-gradient(180deg, #f8fafc 0%, #edf2f7 100%);
+    }
+
+    .page {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 28px 24px 40px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+
+    .card,
+    .theme-button,
+    .preview-shell {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(217, 217, 217, 0.9);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .card {
+      padding: 24px;
+    }
+
+    h1, h2, h3, p {
+      margin: 0;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--color-primary-soft);
+      color: var(--color-primary);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .hero h1 {
+      margin-top: 14px;
+      font-size: 36px;
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+    }
+
+    .hero p {
+      margin-top: 12px;
+      color: var(--color-text-muted);
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    .hero ul {
+      margin: 16px 0 0;
+      padding-left: 18px;
+      color: var(--color-text-muted);
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    .recommendation {
+      display: grid;
+      gap: 12px;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--color-border);
+      background: var(--color-surface-muted);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--color-text);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .theme-panel {
+      display: grid;
+      gap: 12px;
+      position: sticky;
+      top: 20px;
+    }
+
+    .theme-button {
+      padding: 16px;
+      cursor: pointer;
+      transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .theme-button:hover {
+      transform: translateY(-3px);
+      border-color: color-mix(in srgb, var(--color-primary) 28%, #d9d9d9);
+    }
+
+    .theme-button.active {
+      border-color: var(--color-primary);
+      box-shadow: 0 16px 36px color-mix(in srgb, var(--color-primary) 16%, transparent);
+    }
+
+    .theme-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .theme-top strong {
+      font-size: 16px;
+    }
+
+    .theme-button p {
+      margin-top: 8px;
+      color: var(--color-text-muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .swatches {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .swatch {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .content {
+      display: grid;
+      gap: 18px;
+    }
+
+    .preview-shell {
+      padding: 16px;
+      background: linear-gradient(180deg, color-mix(in srgb, var(--color-page) 92%, white), var(--color-page));
+    }
+
+    .preview-workbench {
+      display: grid;
+      grid-template-columns: 18% 1fr 24%;
+      min-height: 440px;
+      border-radius: var(--panel-radius);
+      overflow: hidden;
+      border: 1px solid color-mix(in srgb, var(--color-border) 90%, white);
+      background: var(--color-surface);
+    }
+
+    .pane {
+      padding: 14px;
+      background: var(--color-surface-muted);
+      border-right: 1px solid color-mix(in srgb, var(--color-border) 85%, white);
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .pane.right {
+      background: var(--color-surface);
+      border-right: none;
+      border-left: 1px solid color-mix(in srgb, var(--color-border) 85%, white);
+    }
+
+    .pane.center {
+      background:
+        linear-gradient(color-mix(in srgb, var(--color-border) 50%, transparent) 1px, transparent 1px),
+        linear-gradient(90deg, color-mix(in srgb, var(--color-border) 50%, transparent) 1px, transparent 1px);
+      background-size: 24px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 14px;
+      padding: 16px;
+    }
+
+    .node {
+      width: 130px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid color-mix(in srgb, var(--color-border) 90%, white);
+      background: var(--color-surface);
+      box-shadow: 0 16px 28px color-mix(in srgb, var(--color-primary) 8%, transparent);
+      font-size: 12px;
+      text-align: center;
+      color: var(--color-text);
+    }
+
+    .node-line {
+      width: 4px;
+      height: 28px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, var(--color-primary), color-mix(in srgb, var(--color-primary) 40%, white));
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .badge-primary {
+      background: color-mix(in srgb, var(--color-primary) 12%, white);
+      color: var(--color-primary);
+    }
+
+    .badge-success {
+      background: color-mix(in srgb, var(--color-success) 12%, white);
+      color: var(--color-success);
+    }
+
+    .badge-warning {
+      background: color-mix(in srgb, var(--color-warning) 12%, white);
+      color: var(--color-warning);
+    }
+
+    .badge-danger {
+      background: color-mix(in srgb, var(--color-danger) 12%, white);
+      color: var(--color-danger);
+    }
+
+    .line {
+      height: 10px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--color-border) 65%, white);
+    }
+
+    .line.short { width: 52%; }
+    .line.mid { width: 76%; }
+    .line.long { width: 94%; }
+
+    .preview-footer {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .kpi {
+      padding: 14px;
+      border-radius: var(--panel-radius);
+      background: var(--color-surface);
+      border: 1px solid color-mix(in srgb, var(--color-border) 88%, white);
+    }
+
+    .kpi span {
+      display: block;
+      color: var(--color-text-muted);
+      font-size: 12px;
+    }
+
+    .kpi strong {
+      display: block;
+      margin-top: 6px;
+      font-size: 22px;
+      color: var(--color-text);
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 18px;
+    }
+
+    .token-card {
+      padding: 20px;
+      border-radius: var(--radius);
+      background: var(--color-surface);
+      border: 1px solid color-mix(in srgb, var(--color-border) 88%, white);
+      box-shadow: var(--shadow);
+    }
+
+    .token-card h2 {
+      font-size: 18px;
+      margin-bottom: 12px;
+    }
+
+    .token-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    .token-table th,
+    .token-table td {
+      border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, white);
+      text-align: left;
+      padding: 10px 8px;
+      font-size: 13px;
+      vertical-align: top;
+    }
+
+    .token-table th {
+      color: var(--color-text-muted);
+      font-size: 12px;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      background: color-mix(in srgb, var(--color-page) 65%, white);
+    }
+
+    .token-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    .ant-map {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+      color: var(--color-text-muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .alert-stack {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .alert {
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid color-mix(in srgb, var(--color-border) 90%, white);
+      background: color-mix(in srgb, var(--color-page) 75%, white);
+    }
+
+    .alert strong {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    .alert p {
+      color: var(--color-text-muted);
+      line-height: 1.6;
+      font-size: 13px;
+    }
+
+    @media (max-width: 1080px) {
+      .hero,
+      .layout,
+      .detail-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .theme-panel {
+        position: static;
+      }
+
+      .preview-workbench {
+        grid-template-columns: 1fr;
+      }
+
+      .pane,
+      .pane.right {
+        border-left: none;
+        border-right: none;
+        border-bottom: 1px solid color-mix(in srgb, var(--color-border) 85%, white);
+      }
+
+      .preview-footer {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <div class="card">
+        <span class="eyebrow">BMAD Step 8 Deliverable</span>
+        <h1>数字化验收平台主题可视化台</h1>
+        <p>
+          该文件用于补齐没有现成品牌规范时的主题探索步骤。每个主题都同时展示工作台、状态语义、数据卡片和 Token 映射，
+          便于直接判断是否适合作为 `Ant Design` Alias Token 的上层视觉基调。
+        </p>
+        <ul>
+          <li>支持 5 套工业化 B 端主题的切换，不只是给出孤立色板。</li>
+          <li>同时预览主操作、风险提示、图谱节点和表格/卷宗类信息块。</li>
+          <li>输出当前主题对应的 Token 契约和 Ant Design 映射建议。</li>
+        </ul>
+      </div>
+      <div class="card recommendation">
+        <h2>当前推荐主题</h2>
+        <p>
+          推荐采用 <strong>Industrial Precision &amp; Trust</strong> 作为默认主题。
+          这套配色和当前 UX 规格中的深空蓝、治理灰、制造绿、工业橙一致，最适合承接“模型化工作台 + 发布门禁 + 运行指挥台”的组合气质。
+        </p>
+        <div class="pill-row">
+          <span class="pill">推荐: Industrial Precision</span>
+          <span class="pill">全局主色: #1D39C4</span>
+          <span class="pill">状态语义清晰</span>
+          <span class="pill">适配高密度桌面端</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="layout">
+      <aside class="theme-panel" id="theme-list"></aside>
+
+      <main class="content">
+        <section class="preview-shell">
+          <div class="preview-workbench">
+            <div class="pane">
+              <span class="badge badge-primary">方案树</span>
+              <div class="line long"></div>
+              <div class="line mid"></div>
+              <div class="line short"></div>
+              <div class="line mid"></div>
+              <span class="badge badge-warning">A-17 待校验</span>
+            </div>
+            <div class="pane center">
+              <div class="node">ITP / 批次 A-17</div>
+              <div class="node-line"></div>
+              <div class="node">Evidence Package</div>
+              <div class="node-line"></div>
+              <div class="node">PDM + MES Connector</div>
+            </div>
+            <div class="pane right">
+              <span class="badge badge-success">9 项通过</span>
+              <span class="badge badge-danger">2 项阻断</span>
+              <div class="line long"></div>
+              <div class="line mid"></div>
+              <div class="line short"></div>
+              <span class="badge badge-primary">发布预演</span>
+            </div>
+          </div>
+
+          <div class="preview-footer">
+            <div class="kpi"><span>执行中任务</span><strong>18</strong></div>
+            <div class="kpi"><span>阻断项</span><strong>2</strong></div>
+            <div class="kpi"><span>卷宗完成度</span><strong>91%</strong></div>
+            <div class="kpi"><span>连接器健康</span><strong>97%</strong></div>
+          </div>
+        </section>
+
+        <section class="detail-grid">
+          <div class="token-card">
+            <h2>当前主题 Token</h2>
+            <table class="token-table">
+              <thead>
+                <tr>
+                  <th>Token</th>
+                  <th>当前值</th>
+                  <th>用途</th>
+                </tr>
+              </thead>
+              <tbody id="token-table-body"></tbody>
+            </table>
+          </div>
+
+          <div class="token-card">
+            <h2>映射与使用说明</h2>
+            <div class="ant-map" id="theme-guidance"></div>
+            <div class="alert-stack">
+              <div class="alert">
+                <strong>主按钮 / 关键推进</strong>
+                <p id="primary-guidance">使用主色强调“执行预演”“批准发布”“生成卷宗”这类核心操作。</p>
+              </div>
+              <div class="alert">
+                <strong>风险与阻断</strong>
+                <p id="risk-guidance">用 warning / danger 组合表达“可修复缺口”和“必须阻断”的差异，不允许只用一种红色覆盖全部异常。</p>
+              </div>
+              <div class="alert">
+                <strong>中性信息层</strong>
+                <p id="neutral-guidance">页面背景、边界和次级文本要为高密度内容让路，避免营销化大渐变吞掉结构。</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </section>
+  </div>
+
+  <script>
+    const themes = [
+      {
+        id: "industrial",
+        name: "Industrial Precision & Trust",
+        recommended: true,
+        description: "沉稳工业蓝 + 治理灰，适合作为模型化工作台的默认主题。",
+        colors: {
+          primary: "#1D39C4",
+          primarySoft: "#DFE5FF",
+          page: "#F5F7FA",
+          surface: "#FFFFFF",
+          surfaceMuted: "#F7F9FC",
+          border: "#D9D9D9",
+          text: "#141414",
+          textMuted: "#595959",
+          success: "#389E0D",
+          warning: "#D46B08",
+          danger: "#CF1322",
+          accent: "#274796"
+        },
+        guidance: [
+          "适合作为 Ant Design 主主题，建议 `colorPrimary -> #1D39C4`。",
+          "用于 Page 02-08 的工作台时，能稳定承接表格、树、抽屉和流程状态。",
+          "运行态页面可叠加更强的告警与数据块，而不需要换掉全局底色。"
+        ]
+      },
+      {
+        id: "slate",
+        name: "Command Slate",
+        recommended: false,
+        description: "更深、更冷静的蓝灰控制台气质，适合偏监控和夜间值守。",
+        colors: {
+          primary: "#2B4C7E",
+          primarySoft: "#D9E4F4",
+          page: "#EEF2F6",
+          surface: "#FFFFFF",
+          surfaceMuted: "#F4F7FA",
+          border: "#C8D2DD",
+          text: "#192331",
+          textMuted: "#5C6978",
+          success: "#2E8A57",
+          warning: "#B7740D",
+          danger: "#C44747",
+          accent: "#20395E"
+        },
+        guidance: [
+          "更适合运行主控台和态势分析，不建议用作全部建模页默认主题。",
+          "若采用该方向，需要提高表单边界和输入对比度，避免一片灰蓝。",
+          "适合作为 Mission Control 局部主题，而不是唯一全局主题。"
+        ]
+      },
+      {
+        id: "olive",
+        name: "Field Olive Operations",
+        recommended: false,
+        description: "偏现场指挥和军工装配车间气质，适合强调执行与作业。",
+        colors: {
+          primary: "#476A2A",
+          primarySoft: "#E3ECD8",
+          page: "#F4F6F0",
+          surface: "#FFFFFF",
+          surfaceMuted: "#F7F9F3",
+          border: "#D6DDCB",
+          text: "#1C2416",
+          textMuted: "#616B58",
+          success: "#2F7D32",
+          warning: "#A6670A",
+          danger: "#B63A3A",
+          accent: "#364F22"
+        },
+        guidance: [
+          "适合执行类和现场协同页面，但治理和卷宗页会稍显厚重。",
+          "如果使用该主题，建议让证据和文档界面回到更浅的中性色底。",
+          "可作为某些行业子域或现场模式主题，而非总盘默认值。"
+        ]
+      },
+      {
+        id: "bronze",
+        name: "Archive Bronze Ledger",
+        recommended: false,
+        description: "偏档案、审计、卷宗台账语言，适合证据与归档体验。",
+        colors: {
+          primary: "#8A5A16",
+          primarySoft: "#F1E2C8",
+          page: "#FAF6EF",
+          surface: "#FFFFFF",
+          surfaceMuted: "#FCF9F3",
+          border: "#E2D3BA",
+          text: "#261C12",
+          textMuted: "#6C5C4A",
+          success: "#4E8F3A",
+          warning: "#B56C09",
+          danger: "#B53B32",
+          accent: "#704811"
+        },
+        guidance: [
+          "非常适合 Page 11 的卷宗和审批工作区语言。",
+          "若作为全局主题，会削弱建模和图谱页的技术感。",
+          "建议只作为 Evidence Ledger Workspace 的局部视觉语言。"
+        ]
+      },
+      {
+        id: "contrast",
+        name: "High Clarity Light",
+        recommended: false,
+        description: "强调极高可读性和边界清晰度，适合适老化和高对比版本。",
+        colors: {
+          primary: "#003EB3",
+          primarySoft: "#DDE8FF",
+          page: "#F7F9FC",
+          surface: "#FFFFFF",
+          surfaceMuted: "#FBFCFE",
+          border: "#BFCBDC",
+          text: "#0E1217",
+          textMuted: "#485569",
+          success: "#207227",
+          warning: "#9F5A00",
+          danger: "#B00020",
+          accent: "#002D80"
+        },
+        guidance: [
+          "非常适合作为无障碍加强版或 Comfortable Mode 的视觉底座。",
+          "信息表达极清楚，但情绪张力略弱，不够突出工业质感。",
+          "可作为默认主题的高对比切换模式保留。"
+        ]
+      }
+    ];
+
+    const root = document.documentElement;
+    const list = document.getElementById("theme-list");
+    const tokenBody = document.getElementById("token-table-body");
+    const guidance = document.getElementById("theme-guidance");
+    const primaryGuidance = document.getElementById("primary-guidance");
+    const riskGuidance = document.getElementById("risk-guidance");
+    const neutralGuidance = document.getElementById("neutral-guidance");
+
+    function tokenRow(label, value, usage) {
+      return `
+        <tr>
+          <td>${label}</td>
+          <td><span class="token-dot" style="background:${value}"></span>${value}</td>
+          <td>${usage}</td>
+        </tr>
+      `;
+    }
+
+    function renderThemeButtons(activeId) {
+      list.innerHTML = themes.map((theme) => `
+        <button class="theme-button ${theme.id === activeId ? "active" : ""}" type="button" data-theme="${theme.id}">
+          <div class="theme-top">
+            <strong>${theme.name}</strong>
+            ${theme.recommended ? '<span class="pill">Recommended</span>' : ""}
+          </div>
+          <p>${theme.description}</p>
+          <div class="swatches">
+            <span class="swatch" style="background:${theme.colors.primary}"></span>
+            <span class="swatch" style="background:${theme.colors.surfaceMuted}"></span>
+            <span class="swatch" style="background:${theme.colors.success}"></span>
+            <span class="swatch" style="background:${theme.colors.warning}"></span>
+            <span class="swatch" style="background:${theme.colors.danger}"></span>
+          </div>
+        </button>
+      `).join("");
+
+      list.querySelectorAll("button[data-theme]").forEach((button) => {
+        button.addEventListener("click", () => applyTheme(button.dataset.theme));
+      });
+    }
+
+    function applyTheme(themeId) {
+      const theme = themes.find((item) => item.id === themeId) || themes[0];
+      const c = theme.colors;
+      root.style.setProperty("--color-primary", c.primary);
+      root.style.setProperty("--color-primary-soft", c.primarySoft);
+      root.style.setProperty("--color-page", c.page);
+      root.style.setProperty("--color-surface", c.surface);
+      root.style.setProperty("--color-surface-muted", c.surfaceMuted);
+      root.style.setProperty("--color-border", c.border);
+      root.style.setProperty("--color-text", c.text);
+      root.style.setProperty("--color-text-muted", c.textMuted);
+      root.style.setProperty("--color-success", c.success);
+      root.style.setProperty("--color-warning", c.warning);
+      root.style.setProperty("--color-danger", c.danger);
+      root.style.setProperty("--color-accent", c.accent);
+
+      renderThemeButtons(theme.id);
+
+      tokenBody.innerHTML = [
+        tokenRow("--ib-color-primary", c.primary, "主按钮、选中态、主推进"),
+        tokenRow("--ib-color-bg-page", c.page, "页面大底色"),
+        tokenRow("--ib-color-bg-surface", c.surface, "卡片、表格、抽屉"),
+        tokenRow("--ib-color-border-strong", c.border, "高密度表单和分隔线"),
+        tokenRow("--ib-color-text-primary", c.text, "标题、正文、关键数值"),
+        tokenRow("--ib-color-text-secondary", c.textMuted, "辅助信息、字段说明"),
+        tokenRow("--ib-color-success", c.success, "通过、健康、归档完成"),
+        tokenRow("--ib-color-warning", c.warning, "待修复缺口、提醒"),
+        tokenRow("--ib-color-danger", c.danger, "阻断、越权、失败")
+      ].join("");
+
+      guidance.innerHTML = theme.guidance.map((item) => `<div>${item}</div>`).join("");
+      primaryGuidance.textContent = `${theme.name} 下建议继续使用 ${c.primary} 作为“执行预演”“批准发布”“生成卷宗”等唯一主操作色。`;
+      riskGuidance.textContent = `告警建议保留 warning(${c.warning}) 与 danger(${c.danger}) 的双层语义，不把全部问题压缩成单一红色。`;
+      neutralGuidance.textContent = `当前中性层使用 ${c.page} / ${c.surface} / ${c.border} 承担结构分层，保证高密度内容仍能稳定阅读。`;
+    }
+
+    applyTheme("industrial");
+  </script>
+</body>
+</html>
