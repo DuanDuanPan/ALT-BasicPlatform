@@ -1,0 +1,1 @@
+仓库以 Markdown 文档为主，规划产物通常位于 `_bmad-output/planning-artifacts/`。评审时应优先提供基于证据的结论，引用精确到文件与行号。遵循 BMAD 工作流时，需要先读取对应 workflow 配置与指令文件，再按要求执行。沟通语言使用中文。

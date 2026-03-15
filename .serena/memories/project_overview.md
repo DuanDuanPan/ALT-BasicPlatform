@@ -1,0 +1,1 @@
+ALT-BasicPlatform（基础底座）是一个以文档与架构规划为主的仓库，不是业务源码仓库。核心内容集中在 _bmad-output/ 生成的规划产物，尤其是 architecture/ 下的工业研发底座蓝图、ADR、附录和 review pack；docs/reference/ 保存竞品、标准和既有系统资料的解析稿；_bmad/ 保存 BMAD 工作流与任务定义。项目目标是围绕 OLTran.CDM、OLTran.TDM、OLTran.SUN.BPM 三条业务线形成统一平台内核。默认沟通与文档输出语言均为中文。

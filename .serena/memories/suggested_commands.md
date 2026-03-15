@@ -1,0 +1,1 @@
+常用命令：`ls`/`find`/`rg` 用于检索文档；`git status --short`、`git diff --name-only` 查看变更；`python docs/reference/scripts/local_converter.py` 运行资料转换脚本；若需安装转换依赖：`pip install PyMuPDF python-pptx docx2txt pandas Pillow pytesseract`。Darwin 环境下如处理旧 .doc/OCR，还需系统命令 `antiword` 与 `tesseract`（含 `chi_sim+eng` 语言包）。
