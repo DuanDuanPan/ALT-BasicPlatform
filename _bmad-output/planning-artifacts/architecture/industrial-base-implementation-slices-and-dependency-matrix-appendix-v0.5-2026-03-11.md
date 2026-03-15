@@ -1,8 +1,9 @@
 # 工业研发底座实施切片与依赖矩阵附录
 
-状态：`Draft v0.5`  
-日期：`2026-03-11`  
+状态：`Draft v0.6`
+日期：`2026-03-15`（基于 v0.5 2026-03-11 更新）
 对应修订项：`M-07`、`M-08`
+变更说明：v0.6 同步——MVP Core 补入 Graph Service；Deferred 中 Plugin Lifecycle 改为 Extension Unit Lifecycle 并移至 Wave 2+；纵切 A/B 依赖补入 Graph Service；服务依赖拓扑对齐新口径。
 
 ---
 
@@ -18,10 +19,11 @@
 
 | 波次 | 服务 |
 | --- | --- |
-| `MVP Core` | Identity、Master Data、Data Source Management、Object Model Registry、File/Object、Workflow、Task Orchestration、ACL Policy、Classification & Secrecy Policy、Crypto Policy、Meta-model Extension、Rule、Trace、Audit、Search、Integration Gateway、Config & Release、Industry Template Package、Tenant Bootstrap |
+| `MVP Core` | Identity、Master Data、Data Source Management、Object Model Registry、File/Object、Workflow、Task Orchestration、ACL Policy、Classification & Secrecy Policy、Crypto Policy、Meta-model Extension、Rule、Trace、Graph Service、Audit、Search、Integration Gateway、Config & Release、Industry Template Package、Tenant Bootstrap |
 | `Wave 1` | Requirement、Architecture、Function/Logical/Physical Architecture、Interface Definition、Project、WorkPackage、Task Collaboration、Review & Change、Test Planning、Test Execution、DataSet、Analysis、Site & Device、Research Project、Contract、Approval、Model Automation |
 | `Wave 2` | Simulation Task、HPC Job Proxy、Result Package、Workbench Session、Toolflow Orchestration、CAD/CAE Runtime、Storage Tiering、TODS Model Registry、ATF/XML Exchange、Knowledge、Semantic Retrieval、Worker Executor |
-| `Deferred` | Plugin Lifecycle、AI Assistant 高级能力、生态插件包、Advanced Dashboard |
+| `Wave 2+` | Extension Unit Lifecycle（ServerUnit 注册/沙箱/进程管理、ClientUnit 注册/加载）、FED 可视化编辑工作台 |
+| `Deferred` | AI Assistant 高级能力、Advanced Dashboard、生态开放组件 |
 
 ---
 
@@ -40,7 +42,7 @@
 | 身份与安全 | Identity、ACL Policy、Classification & Secrecy Policy、Audit |
 | 模型与对象 | Object Model Registry、Meta-model Extension、Rule |
 | 业务与对象 | Requirement、Architecture、Test Planning、Test Execution、DataSet、File/Object |
-| 主线与检索 | Trace、Search |
+| 主线与检索 | Trace、Graph Service、Search |
 | 发布与环境 | Config & Release |
 
 ### 3.3 出口验收
@@ -69,7 +71,7 @@
 | 模型与注册 | Object Model Registry、Meta-model Extension |
 | 复制交付 | Industry Template Package、Tenant Bootstrap、Config & Release |
 | 数据源 | Data Source Management |
-| 检索与治理 | Search、Rule |
+| 检索与治理 | Search、Graph Service、Rule |
 
 ### 4.3 出口验收
 
@@ -100,7 +102,8 @@
 | Architecture | Requirement、Object Model Registry、Trace、Audit |
 | Test Planning / Test Execution | Architecture、Rule、Object Model Registry、Audit |
 | DataSet | Test Execution、File/Object、Audit |
-| Trace | Audit、Search、Graph Storage |
+| Trace | Audit、Search |
+| Graph Service | Trace（写入源）、Audit、ACL Policy |
 | Meta-model Extension | Object Model Registry、Config & Release、Audit |
 | Industry Template Package | Meta-model Extension、Data Source Management、Tenant Bootstrap、Config & Release |
 | Tenant Bootstrap | Identity、Master Data、Config & Release、Audit |
@@ -140,3 +143,4 @@
 ### Sprint 4+
 
 - 进入 `Wave 2` 的 HPC、Workbench 和知识增强
+- `Wave 2+`：在编辑态和扩展治理过渡方案验证充分后，交付 Extension Unit Lifecycle 和 FED 可视化编辑工作台的完整运行时基础设施

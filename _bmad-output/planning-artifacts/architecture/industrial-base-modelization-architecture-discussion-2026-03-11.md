@@ -95,8 +95,9 @@
 │   ├── control-processes/       ← 管控流程（BPMN/Activiti）
 │   └── event-chains/            ← 事件联动链
 ├── behavior/
-│   ├── views/                   ← 视图与页面模板
-│   └── plugins/                 ← 客户特有适配扩展（可选，不承载标准集成主路径）
+│   ├── views/                   ← 视图与页面模板（含完整 UI Schema 和 FED 扩展声明）
+│   ├── server-units/            ← 后端扩展单元（替代原 plugins/，见蓝图 v0.6 §4.6）
+│   └── client-units/            ← 前端扩展单元（替代原 plugins/，见蓝图 v0.6 §4.6）
 └── runtime/
     ├── master-data/             ← 主数据规格与就绪要求
     ├── connectors/              ← 集成需求声明与连接器契约

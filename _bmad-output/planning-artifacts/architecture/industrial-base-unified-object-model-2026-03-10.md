@@ -1,7 +1,8 @@
 # 工业研发底座统一对象模型
 
-状态：`Draft v0.4`  
-日期：`2026-03-10`  
+状态：`Draft v0.5`
+日期：`2026-03-15`
+变更说明：`v0.5` 新增 §13.5 UI Schema 与编辑态架构对象族，补充 ExtensionPoint、FeatureExtension、DesignChangeset、ComponentType 概念，与 AD-24 对齐。  
 用途：作为《工业研发底座架构设计与治理草案》和《统一能力地图》的下一层产物，用于定义底座统一语言、对象边界、聚合根、关键关系和治理规则。
 
 ---
@@ -746,6 +747,391 @@ viewTemplate:
 
 ---
 
+## 13.5 UI Schema 与编辑态架构对象族
+
+`v0.4` 的 §13.4 定义了 `ViewTemplate` 家族，解决了"页面长什么样、字段放哪里、动作怎么触发"。
+`v0.5` 在此基础上补充编辑态（Design Mode）的架构对象，支持 NocoBase 式原地编辑范式。
+
+### 13.5.1 架构背景：引擎 + Schema 混合模式（AD-24）
+
+平台 UI 采用三层分离架构：
+
+| 层级 | 实现方式 | 说明 |
+|---|---|---|
+| **引擎层** | 硬编码 | 复杂交互引擎（graph-canvas、form-engine、table-engine 等），保证交互品质 |
+| **能力组件层** | 硬编码 + 配置接口 | 通用业务组件（io-configurator、relation-browser、dynamic-form 等） |
+| **页面组合层** | 声明式 UI Schema | 由引擎和组件组合而成的页面定义，编辑态可原地修改 |
+
+运行态和编辑态共享同一份 UI Schema，区别仅在于渲染引擎是否激活配置装饰器（Configuration Decorators）。
+
+### 13.5.2 PageTemplate 的 UI Schema 演进
+
+`PageTemplate` 从 §13.4 的"根对象 + 子节点树"演进为**包含完整 UI Schema 的声明式定义**：
+
+```yaml
+PageTemplate:
+  meta:
+    name: batch-quality-workbench
+    module: quality-management
+    schemaVersion: 2.1
+  uiSchema:
+    root:
+      type: page
+      children:
+        - key: main-table
+          type: table-engine          # 引用 ComponentRegistry 中的引擎
+          config: { ... }             # 引擎配置参数（可编辑）
+          fieldBindings: [...]        # 字段绑定（可编辑）
+        - key: side-panel
+          type: tab-panel
+          tabs:
+            - key: detail-form
+              type: dynamic-form      # 引用能力组件
+            - key: trace-view
+              type: relation-browser
+  extensionPoints: [...]              # 预埋的可扩展点
+```
+
+UI Schema 中的 `type` 字段是 `ComponentRegistry` 的 key，解析器据此查找对应实现。
+
+### 13.5.3 新增对象族
+
+| 对象/概念 | 层级 | 说明 | 核心属性 |
+|---|---|---|---|
+| `ExtensionPoint` | PageTemplate 子结构 | 声明 UI Schema 中的可扩展挂载点，控制编辑态的可编辑边界 | `slot`（路径标识）、`type(field-list/component-list/tab-list/action-list)`、`extensible`、`exclusivity(shared/exclusive)`、`allowedComponentTypes` |
+| `FeatureExtension` | 模块级构件 | 编辑态操作的自动产出物，横切特性的结构化载体，用于复用和分发 | `name`、`version`、`scope(module/page_set/page)`、`targetModule`、`layer(M0.5/M1/M2)`、`overridable`、`schemaDelta`、`viewBindings`、`actionBindings`、`compatibleWith`、`exportAs(standalone/bundled)`、`conflictsWith` |
+| `DesignChangeset` | 治理对象 | 编辑态的 Draft 暂存区，记录一次编辑会话中的所有 UI Schema 变更 | `id`、`author`、`moduleRef`、`status(draft/reviewing/published/rejected)`、`changes[]`、`impactAnalysis`、`validationResult`、`publishedAt` |
+| `ComponentType` | 平台注册表 | ComponentRegistry 中注册的组件类型定义 | `key`、`category(engine/capability/display/field)`、`name`、`configSchema`、`version`、`minPlatformVersion` |
+
+### 13.5.4 ExtensionPoint 与编辑态的关系
+
+`ExtensionPoint` 是编辑态可编辑边界的**唯一控制机制**：
+
+- M1 层模块设计者在 PageTemplate 中预埋 `ExtensionPoint`
+- 编辑态渲染引擎扫描 `ExtensionPoint` 后，在对应位置渲染配置装饰器（⚙️ 齿轮、➕ 按钮等）
+- M2 层客户管理员只能在有 `ExtensionPoint` 的位置进行扩展操作
+- 没有 `ExtensionPoint` 的区域在编辑态下不出现编辑入口
+
+```yaml
+extensionPoints:
+  - slot: main-table.columns
+    type: field-list
+    extensible: true
+    allowedComponentTypes: [string, number, date, domain-object-ref, computed]
+  - slot: side-panel.tabs
+    type: tab-list
+    extensible: true
+    allowedComponentTypes: [dynamic-form, relation-browser, chart-panel]
+  - slot: toolbar.actions
+    type: action-list
+    extensible: true
+```
+
+### 13.5.5 FeatureExtension 的生命周期
+
+```text
+用户在编辑态操作
+  → UI Schema 变更记录到 DesignChangeset
+  → 系统自动 diff 生成 FeatureExtension（作为结构化变更单元）
+  → DesignChangeset 提交影响分析
+  → 影响分析通过 → 发布 → FeatureExtension 注册到 Object Model Registry
+  → FeatureExtension 可从 M2 晋升到 M1（从项目中提炼标准 ITP）
+```
+
+FED 是"产出"而非"输入"——用户在编辑态做的是可视化操作，系统在后台自动生成和管理 FED。
+
+### 13.5.6 DesignChangeset 与治理
+
+编辑态的变更不直接生效于运行态，而是暂存在 `DesignChangeset` 中：
+
+```text
+编辑态操作 → DesignChangeset (Draft)
+  → 影响分析（受影响的能力包/变体/下游流程）
+  → 兼容性校验（SchemaVersion 兼容性、slot 冲突检测）
+  → 发布确认 → 正式生效
+```
+
+类似 Git 的 staging 概念。`DesignChangeset` 的状态机：
+
+`Draft → Reviewing → Published / Rejected`
+
+### 13.5.7 ComponentType 注册表
+
+UI Schema 中的 `type` 字段引用 `ComponentRegistry` 中的组件：
+
+| 类别 | 更新方式 | 示例 |
+|---|---|---|
+| `engine` | 代码发布，npm 包级别 | graph-canvas, form-engine, table-engine, kanban-engine |
+| `capability` | 代码发布 + 配置接口 | io-configurator, relation-browser, dynamic-form, tree-navigator |
+| `display` | 可通过 M1/M2 注册自定义 | card, badge, tag, chart-bar, chart-pie, progress-ring |
+| `field` | 可通过 M1/M2 注册自定义 | string, number, date, file, domain-object-ref, computed |
+
+引擎和能力组件是平台核心资产，其丰富度决定平台能力边界。建议分批丰富：
+
+- 第一批（MVP）：graph-canvas, form-engine, table-engine
+- 第二批：kanban-engine, timeline-engine, dashboard-engine
+- 第三批：3d-viewer, diagram-editor
+
+### 13.5.8 FED 依赖声明与便携性
+
+FED 的分发方式由依赖图谱自动决定，manifest 中必须包含显式依赖声明：
+
+```yaml
+featureExtension:
+  meta:
+    name: performance-metrics-workpackage
+    version: 1.0.0
+    portability: module-bound    # 系统自动计算
+
+  dependencies:
+    schema:
+      - object: WorkPackage
+        minVersion: "2.1"
+        fields: [status, assignee]
+    components:
+      platform: [table-engine, dynamic-form]
+      custom: [PerformanceBadge, PerformanceAggregation]
+    extensionPoints:
+      - template: work-package-decomposition
+        slot: node-card.badges
+      - template: work-package-decomposition
+        slot: side-panel.tabs
+    actions:
+      internal: [calculatePerformanceScore, rollupPerformanceToParent]
+      external:
+        - ref: TaskOrchestration.onStatusChanged
+    crossObject:
+      - object: Task
+        fields: [actualHours, plannedHours]
+        access: read-only
+```
+
+**便携性自动计算规则：**
+
+| 级别 | 条件 | 分发方式 |
+|---|---|---|
+| `independent` | 无 extensionPoints 依赖 && 无 external actions && 无 crossObject | 可独立分发 |
+| `module-bound` | 所有依赖属于同一模块 | 需绑定模块 |
+| `pack-bound` | 依赖跨越多个模块 | 需绑定能力包 |
+
+### 13.5.9 能力包的 FED 控制机制
+
+能力包（`CapabilityPack`）新增 FED 相关声明：
+
+| 属性 | 说明 |
+|---|---|
+| `requiredFEDs[]` | 随包必须启用的 FED |
+| `optionalFEDs[]` | 客户可选启用的 FED |
+| `fedCoordination[]` | 跨模块 FED 的启用约束（group + constraint） |
+| `orchestrationModule` | 包级编排模块——承载跨模块总览页、汇总页 |
+
+```yaml
+capabilityPack:
+  name: project-performance-pack
+  modules:
+    - ref: work-package-center
+    - ref: project-overview
+  requiredFEDs:
+    - performance-metrics-workpackage
+    - performance-metrics-project-view
+  fedCoordination:
+    - group: performance-suite
+      members: [performance-metrics-workpackage, performance-metrics-project-view]
+      constraint: all-or-nothing
+      reason: "跨模块数据依赖，部分启用会导致聚合面板数据不完整"
+  orchestrationModule:
+    name: performance-orchestration
+    pages: [cross-module-performance-dashboard]
+```
+
+**跨模块 FED 的处理原则：** 不做"一个 FED 跨多个模块"，而是拆成多个协作 FED，由能力包的 `fedCoordination` 声明启用约束。
+
+### 13.5.10 包级编排模块
+
+03-13 讨论提出、03-15 讨论正式纳入的概念。
+
+- 定位：P1 能力包层的标准概念
+- 职责：承载跨模块的总览页、汇总页、装配页和包级协调对象
+- 归属：属于能力包，不属于任何单一模块
+- 典型场景：项目绩效总览（汇总工作包中心和项目总览两个模块的绩效数据）
+
+### 13.5.11 FED 晋升治理
+
+**M2 → M1 晋升条件：**
+- 至少 2 个独立项目使用过相似 FED
+- portability 不超过 module-bound
+- 不包含客户专有硬编码逻辑
+- 通过领域架构师设计评审
+- 明确 compatibleWith 范围
+
+**M1 → M0/M0.5 晋升条件：**
+- 至少 2 个领域（CDM/TDM/MIS）出现相似模式
+- 可脱离领域语义独立使用
+- 平台团队愿意承担长期维护和向后兼容
+- 满足平台级性能要求
+
+### 13.5.12 完整层次结构总览（P0-P5）
+
+| 层级 | 名称 | 定位 | 核心对象 |
+|---|---|---|---|
+| P0 | 产品基线层 | 产品族顶层锚点 | ProductBaseline, ProductVariant |
+| P1 | 能力包层 | 装配/交付层 | CapabilityPack, OrchestrationModule |
+| P2 | 模块层 | 内部构件层 | CapabilityModule |
+| P3 | 资产层 | 模块的内容物 | PageTemplate, ActionModel, DomainObject, FlowModel, RuleSet, ConnectorGroup, FeatureExtension |
+| P4 | 构件层 | 资产的内部结构 | ExtensionPoint, FieldBinding, ActionBinding, ContextFieldMapping, TemplatePatch, TemplateVariant, DesignChangeset |
+| P5 | 引擎与组件层 | 平台能力基座 | Engine, CapabilityComponent, DisplayComponent, FieldType, ServerUnit, ClientUnit |
+
+### 13.5.13 Extension Unit（扩展单元）
+
+原 ITP `behavior/plugins/` 概念废弃，统一为 Extension Unit，分为 ServerUnit（后端）和 ClientUnit（前端）。
+
+#### ServerUnit（后端扩展单元）
+
+覆盖：自定义算法、多对象复合操作、事件处理与编排、流程触发、外部系统集成。
+
+| 属性 | 说明 |
+|---|---|
+| `trigger` | 触发方式：action / event / schedule / api |
+| `inputs` / `outputs` | 参数类型声明（接口与实现分离） |
+| `touchedObjects` | 涉及的领域对象及操作类型（影响分析依据） |
+| `externalDependencies` | 依赖的外部服务 |
+| `crossTenantAccess` | 跨租户数据访问声明（需管理员授权） |
+| `resources` | CPU / Memory / GPU / License / 超时 / 并发限制 |
+| `implementation` | 四级：Level 1 表达式(Aviator) / Level 2 沙箱脚本(Nashorn/Jython) / Level 3a 进程内插件(ClassLoader+线程池) / Level 3b 独立子进程(ProcessBuilder) |
+
+**四级实现的渐进升级：** 接口声明统一，Level 1 表达式可无缝升级为 Level 2 脚本再升级为 Level 3a/3b，调用方无感知。受现实约束（无容器、离线部署、信创兼容），Level 3 从容器化方案改为 JVM 进程级方案：L3a 进程内插件（ClassLoader 隔离 + 独立线程池，零网络开销，适合高频/低延迟）和 L3b 独立子进程（ProcessBuilder 启动独立 JVM，本地 Socket 通信，适合大资源/长时间/商业软件调用）。技术栈基于 Java/Spring Boot/Spring Cloud，前端基于 Vue 3 + Vite + Module Federation（离线从本地制品仓库加载）。
+
+#### ClientUnit（前端扩展单元）
+
+覆盖：自定义展示组件、交互行为、编辑器。
+
+| 属性 | 说明 |
+|---|---|
+| `props` | 属性声明 |
+| `slots` | 内容插槽 |
+| `events` | 事件声明 |
+| `actions` | 可调用的后端能力（声明式引用 ServerUnit） |
+| `implementation` | 前端包（entry / styles / framework） |
+
+**前后端配对：** ClientUnit 通过 `actions` 声明式引用 ServerUnit，运行时通过 `platform.execute()` 统一入口调用，平台负责权限、审计、路由、沙箱。
+
+#### ExtensionPoint 范围扩展
+
+扩展点不仅覆盖 UI 层，也覆盖后端层：
+
+**后端层扩展点（新增）：**
+- `action.{name}.compute` → 挂自定义计算
+- `action.{name}.validate` → 挂自定义校验
+- `action.{name}.pre / .post` → 挂前置/后置处理
+- `event.{name}.handler` → 挂事件处理链
+- `flow.{name}.gateway` → 挂流程网关决策
+- `connector.{name}.transform` → 挂数据转换
+
+#### ExtensionPoint 设计方法论：Convention over Configuration
+
+扩展点不靠 M1 开发者逐个手动预埋，而是由 P5 层引擎和组件**自动提供标准扩展点模式**：
+
+**UI 层——每种引擎/组件自动提供：**
+- `table-engine`: columns / filters / actions.toolbar / actions.row / actions.batch / pagination / empty-state
+- `form-engine`: fields / sections / actions.submit / validation / layout
+- `graph-canvas`: node.content / node.badges / node.context-menu / edge.label / toolbar / canvas.background / minimap
+- `tab-panel`: tabs / tabs.{tab}.content
+- `io-configurator`: input-types / output-types / validation
+- `relation-browser`: relation-types / display / actions
+
+**后端层——每种资产类型自动提供：**
+- `ActionModel`: pre / validate / compute / post / error
+- `FlowModel`: event.{name}.handler / gateway.{name}.decide / transition.{name}.guard
+- `DomainObject`: onCreate.pre/post / onUpdate.pre/post / onStatusChange.pre/post / onDelete.pre/post
+
+**M1 暴露控制（Exposure Policy）：**
+
+M1 领域开发者通过 `extensionExposure` 声明决定哪些扩展点暴露给 M2，默认白名单制（defaultPolicy: closed）。
+
+```yaml
+capabilityModule:
+  name: work-package-center
+  extensionExposure:
+    defaultPolicy: closed
+    exposed:
+      - pattern: "table-engine.*"
+        expose: [columns, filters, actions.toolbar, actions.row]
+        constraints:
+          columns: { maxCount: 20, allowedTypes: [string, number, date, computed] }
+      - pattern: "graph-canvas.*"
+        expose: [node.content, node.badges, node.context-menu, toolbar]
+      - pattern: "action.*.validate"
+        expose: all
+      - pattern: "action.*.compute"
+        expose: all
+      - pattern: "domain.WorkPackage.onStatusChange"
+        expose: [pre, post]
+```
+
+**三层职责：** M0 定义扩展点模式（引擎内置），M1 决定暴露策略（白名单制），M2 使用已暴露的扩展点（编辑态 ⚙️ 标记）。
+
+#### FED 的 orchestration 声明
+
+当多个 Extension Unit 需要链式编排时，FED 通过 `orchestration` 声明编排关系，由 Task Orchestration Service 解释执行（不在 FED 中新建编排引擎）。
+
+支持：
+- `unit` 步骤（自动执行 ServerUnit）
+- `approval` 步骤（人工审批，走 Workflow Service）
+- `parallel` 并行执行
+- `loopGuard` 双向同步防循环
+- `errorStrategy` 错误处理策略
+
+#### FED 生成模式
+
+| M 层 | 方式 | 说明 |
+|---|---|---|
+| M2 | 100% 自动生成 | 编辑态操作，零 YAML |
+| M1 | 自动 + 手动增强 / FED 可视化编辑工作台 | 零代码部分自动，代码级引用手动或可视化拖拽 |
+
+#### FED 防错四道防线
+
+| 防线 | 时机 | 机制 |
+|---|---|---|
+| 编写时 | IDE 实时校验 | JSON Schema 自动补全 + 引用提示 |
+| 提交时 | 契约校验 | 引用完整性、接口匹配、链路完整性 |
+| 注册时 | 平台校验 | 兼容性、冲突检测、依赖图谱、资源 |
+| 发布时 | 影响分析 | DesignChangeset 治理流程 |
+
+#### 声明式能力 vs Extension Unit 的边界
+
+声明式能力（RuleSet / FlowModel / ActionModel / Workflow）覆盖标准模式。Extension Unit 覆盖超出标准模式的业务逻辑（非标算法、跨聚合根事务、商业软件调用、非标 UI 交互）。
+
+**代码级扩展是声明式能力的试验场：** 当一个 ServerUnit 被足够多领域使用后，平台团队可将其吸收为声明式能力的新标准模式。
+
+### 13.5.14 ITP 包结构更新
+
+```text
+{domain}-itp-v{version}/
+  ├── schema/
+  ├── templates/
+  ├── behavior/
+  │     ├── views/                    ← PageTemplate (UI Schema)
+  │     │     └── extensions/         ← FED 声明
+  │     ├── server-units/             ← ServerUnit（替代原 plugins/）
+  │     └── client-units/             ← ClientUnit（替代原 plugins/）
+  ├── runtime/
+  └── pack-coordination/
+```
+
+### 13.5.15 与 §13.4 的关系
+
+§13.4 定义的 `ViewTemplate` 家族仍然有效，§13.5 是在其基础上的**增量补充**：
+
+| §13.4 概念 | §13.5 演进 |
+|---|---|
+| `ViewTemplate` | 增加 `uiSchema` 和 `extensionPoints` 结构 |
+| `ContainerNode` / `WidgetNode` | 对应 UI Schema 中的节点，`type` 字段引用 `ComponentType` |
+| `FieldBinding` | 不变，仍由 UI Schema 中的 `fieldBindings` 承载 |
+| `TemplatePatch` | 与 `DesignChangeset` 形成互补：`TemplatePatch` 是静态差量，`DesignChangeset` 是编辑态产出 |
+| `ActionBinding` | 不变，可通过编辑态的 `ExtensionPoint(action-list)` 扩展 |
+
+---
+
 ## 14. 实施优先级
 
 ## 14.1 P0 先定义的对象
@@ -818,6 +1204,10 @@ viewTemplate:
 - AdvancedDashboard
 - ConnectorTemplate
 - PluginPackage
+- ExtensionPoint
+- FeatureExtension
+- DesignChangeset
+- ComponentType
 
 ---
 

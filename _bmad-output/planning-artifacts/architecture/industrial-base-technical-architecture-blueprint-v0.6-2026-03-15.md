@@ -1,20 +1,52 @@
 # 工业研发底座技术架构蓝图
 
-状态：`Draft v0.5`  
-日期：`2026-03-11`  
-用途：在 `v0.4` 基础上补齐质量属性场景、运行时契约、数据一致性模型、安全时序、实施依赖矩阵和 ADR 追溯关系，使蓝图具备直接指导实施的粒度。
+状态：`Draft v0.6`
+日期：`2026-03-15`
+基线来源：`v0.5`（2026-03-11 冻结评审基线）
+
+---
+
+## 版本范围说明
+
+本文档是 `v0.6 Draft`，在 `v0.5` 冻结基线的基础上演进。两个版本的范围边界如下：
+
+**v0.5 已冻结内容（运行时视角，对应修订任务 M-01 至 M-09）：**
+- 七层逻辑分层（L1-L7）与四条横切平面的运行时契约
+- 质量属性场景（QA-01 至 QA-08）
+- TraceLink 写入责任与多存储一致性原则
+- 核心聚合根边界与跨域引用规则
+- 安全判定时序、错误码与审计策略
+- MVP Core / Wave 1 / Wave 2 / Deferred 统一优先级
+- 纵切 A/B 最小依赖与验收标准
+- 边缘、模板升级、HPC、部署与治理的原则级规则
+- ADR-001 至 ADR-023
+
+**v0.6 新增内容（产品与扩展视角）：**
+- 产品架构层次（P0-P5）与运行时逻辑分层（L1-L7）正交体系（ADR-024）
+- 引擎 + Schema 混合 UI 架构（AD-24）
+- Extension Unit（ServerUnit/ClientUnit）替代原 plugins 概念
+- FED 与编辑态范式
+- 平台⇄产品⇄项目双向流动模型
+- 扩展点（ExtensionPoint）从 UI 层扩展至后端层
+
+**v0.6 新增内容的配套状态：**
+- ADR-024 已起草，状态 `Proposed`，待正式评审
+- Extension Unit 运行时技术选型待冻结（当前为多方案并存，需 POC 验证后收敛）
+- P0-P5 对象定义已纳入统一对象模型 §13.5，但尚未完成独立验收标准和责任人分配
+- FED 可视化编辑工作台 UX 细化待后续版本
 
 ---
 
 ## 1. 蓝图目标
 
-本版蓝图继续回答 `v0.4` 的八个问题，并新增回答五个实施级问题：
+本版蓝图在 `v0.5` 已冻结的实施级问题基础上，新增回答六个产品架构级问题：
 
-1. 四条横切平面在七层逻辑分层中的接入点是什么。
-2. `TraceLink` 由谁写入、何时写入、失败如何补偿。
-3. 多存储架构下哪些事务强一致，哪些通过事件和 Saga 达成最终一致。
-4. 一次请求进入平台后，安全、密级、审计和解密授权按什么顺序执行。
-5. 实施团队按照什么优先级、波次和纵切依赖推进，不再出现批次和优先级冲突。
+1. 运行时逻辑分层（L1-L7）与产品交付层次（P0-P5）的关系是什么——两者正交，不冲突。
+2. 平台 UI 架构采用什么模式——引擎+Schema 混合架构（AD-24），支持 NocoBase 式编辑态。
+3. 代码级扩展如何纳入统一治理——Extension Unit（ServerUnit/ClientUnit）替代原 plugins 概念。
+4. 零代码扩展和代码级扩展如何统一管理——FED 同时管理声明式扩展和 Extension Unit 引用。
+5. 扩展能力如何从项目积累为产品——FED 晋升路径 M2→M1→M0，飞轮效应。
+6. 扩展的扩展点不仅限于 UI 层——ExtensionPoint 扩展至后端层（compute/validate/pre/post/handler/gateway）。
 
 ---
 
@@ -41,7 +73,7 @@
 
 ## 2.3 约束条件
 
-- 当前仍是研究驱动蓝图，不绑定单一厂商实现
+- 当前是技术中立蓝图，不绑定单一厂商实现，但已达到可指导实施的深度
 - 不假设旧系统一次性替换完成
 - 不允许通过低代码层重定义核心对象、安全模型和主线规则
 - 不允许通过双写和人工约定维护多存储一致性
@@ -65,7 +97,7 @@
 
 ## 3. 总体技术策略
 
-关联 ADR：`ADR-001`、`ADR-002`、`ADR-006`、`ADR-010`、`ADR-013`、`ADR-014`、`ADR-015`、`ADR-016`、`ADR-017`、`ADR-023`
+关联 ADR：`ADR-001`、`ADR-002`、`ADR-006`、`ADR-010`、`ADR-013`、`ADR-014`、`ADR-015`、`ADR-016`、`ADR-017`、`ADR-023`、`ADR-024`
 
 ## 3.1 推荐总体形态
 
@@ -73,8 +105,10 @@
 
 - `产品族共用平台内核`
 - `1 个平台内核 + 3 个一级业务域 + 1 个复制交付工厂 + N 个工程工具/连接器`
-- `七层逻辑分层 + 四条横切平面`
-- `受控装配层 + 元模型驱动扩展体系`
+- `七层逻辑分层（L1-L7）+ 四条横切平面`——运行时视角
+- `六层产品架构（P0-P5）`——交付与扩展视角，与 L1-L7 正交
+- `引擎 + Schema 混合 UI 架构（AD-24）`——编辑态与运行态共享 UI Schema
+- `受控装配层 + 元模型驱动扩展体系 + Extension Unit 代码级扩展`
 - `单实例 / 逻辑隔离 / 物理隔离` 三态部署
 - `侧挂增强 + 受控 AI Worker` 双层智能策略
 
@@ -86,6 +120,10 @@
 - 图谱统一的是服务语义和治理语义，分治的是底层投影和存储实现
 - 横切平面必须定义 injection point、事件、回调和失败责任
 - 任何模板包、模型变更和发布动作都必须进入统一发布链路
+- UI 层引擎（graph-canvas 等）硬编码保证交互品质，Schema 层保证灵活扩展，两者不混淆
+- 代码级扩展（Extension Unit）必须通过 FED 引用和管理，不允许未经注册和治理的脱管扩展
+- 编辑态变更必须经 DesignChangeset 的 Draft→影响分析→发布治理管线
+- 扩展点（ExtensionPoint）覆盖 UI 层和后端层，统一"插座"机制
 
 ---
 
@@ -95,7 +133,17 @@
 
 ## 4.1 七层逻辑分层
 
-沿用 `v0.4` 的 `L1-L7` 分层定义，不再重复展开。
+| 层级 | 名称 | 说明 | 主要能力 |
+| --- | --- | --- | --- |
+| L1 | 体验与装配层 | 统一入口和场景装配 | 门户、角色主页、工作台、表单、视图、看板、导航、页面区块、动作编排 |
+| L2 | 场景应用层 | 面向用户的业务应用 | CDM 应用、TDM 应用、MIS 应用、知识应用 |
+| L3 | 领域服务层 | 承载领域语义和核心聚合根 | 需求、项目、工作包、任务、试验、数据集、合同、设备、知识 |
+| L4 | 平台共享服务层 | 承载共享内核能力 | 身份鉴别与访问控制、主数据、数据源管理、对象模型注册、对象与文件服务、轻量业务流程、任务编排、ACL 策略、密级与保密策略、加解密控制接口、元模型扩展、规则服务、搜索服务、数字主线服务（Trace Service）、图服务（Graph Service）、审计服务、集成控制面、配置发布、模型自动联动 |
+| L5 | 数据与智能层 | 承载多模数据与检索知识底座 | 关系数据服务、文档数据服务、对象存储服务、图谱服务、测量/时序数据服务、搜索索引服务、知识库服务 |
+| L6 | 集成与边缘层 | 承载外部系统、工具和设备接入 | API 网关、事件总线、文件交换、连接器、协议适配、HPC 代理、边缘代理 |
+| L7 | 治理与运行层 | 承载运行治理与非功能保障 | 配置、发布、观测、安全运营、等保/分保合规、三员治理、日志保全与留存、密钥治理、租户隔离、国产化、资产目录与复用运营、应用包发布与升级治理 |
+
+L1-L7 回答"请求怎么流转"，与 P0-P5（§4.4）正交——后者回答"资产谁定义、谁装配、谁扩展"。
 
 ## 4.2 四条横切平面
 
@@ -134,6 +182,110 @@
 | C 复制交付 | `L1/L2` 触发场景装载和初始化 | `L4` 模板校验、租户初始化、自动注册 | `L5` 记录版本账本、安装清单、差量状态 | 发布治理链路负责阻断、回滚和恢复 |
 | D 安全与保密 | 请求进入 `L1/L2/L6` 即触发 | `L4` 统一判定和审计 | `L5` 执行加密、标签、留存和 WORM | 安全策略服务负责拒绝、告警和审计 |
 
+## 4.4 产品架构层次（P0-P5）
+
+关联 ADR：`ADR-024`、`ADR-010`、`ADR-017`
+
+运行时逻辑分层（L1-L7）回答"请求怎么流转"，产品架构层次（P0-P5）回答"资产谁定义、谁装配、谁扩展"。两者正交、互补。
+
+| 层级 | 名称 | 定位 | 核心对象 |
+|---|---|---|---|
+| P0 | 产品基线层 | 产品族顶层锚点 | ProductBaseline, ProductVariant |
+| P1 | 能力包层 | 装配/交付层 | CapabilityPack, OrchestrationModule |
+| P2 | 模块层 | 内部构件层 | CapabilityModule |
+| P3 | 资产层 | 模块的内容物 | PageTemplate, ActionModel, DomainObject, FlowModel, RuleSet, ConnectorGroup, FeatureExtension |
+| P4 | 构件层 | 资产的内部结构 | ExtensionPoint, FieldBinding, ActionBinding, TemplatePatch, DesignChangeset |
+| P5 | 引擎与组件层 | 平台能力基座 | Engine, CapabilityComponent, DisplayComponent, FieldType, ServerUnit, ClientUnit |
+
+**P 轴与 M 轴交叉视图：**
+
+- M0 平台内核（年级变更）：P5 引擎、核心对象定义
+- M0.5 公共业务（半年级）：P3 WorkPackage/Task 等公共对象
+- M1 领域 ITP（季度级）：P2 模块 + P1 能力包 + P3 领域资产
+- M2 客户差异（月级）：P3 FED + P4 编辑态扩展
+
+**关键约束：** ITP 是 P1-P3 的打包产物。M2 编辑态操作 P3-P4 层，由 P5 引擎兜底。用户在一个页面上操作时，P0-P5 多层同时生效，不是逐层深入。
+
+## 4.5 引擎 + Schema 混合 UI 架构（AD-24）
+
+关联 ADR：`ADR-024`
+
+平台 UI 采用三层分离：
+
+| 层级 | 实现方式 | 说明 |
+|---|---|---|
+| 引擎层 | 硬编码 | 复杂交互引擎（graph-canvas、form-engine、table-engine 等） |
+| 能力组件层 | 硬编码 + 配置接口 | 通用业务组件（io-configurator、relation-browser 等） |
+| 页面组合层 | 声明式 UI Schema | 由引擎和组件组合而成的页面定义，编辑态可原地修改 |
+
+运行态和编辑态共享同一份 UI Schema，由双模渲染引擎切换。编辑态通过 ExtensionPoint 控制可编辑边界，变更通过 DesignChangeset 暂存并经影响分析后发布。
+
+扩展点（ExtensionPoint）采用 **Convention over Configuration** 方法论：P5 层引擎和组件自动提供标准扩展点模式（table-engine 自动有 columns/filters/actions，ActionModel 自动有 pre/validate/compute/post 钩子），M1 领域开发者通过 `extensionExposure` 白名单声明决定哪些暴露给 M2 客户。编辑态中 M2 只能看到已暴露的扩展点（⚙️ 和 ➕），未暴露的无编辑入口。
+
+## 4.6 Extension Unit 与扩展机制统一
+
+关联 ADR：`ADR-024`、`ADR-010`
+
+原 ITP `behavior/plugins/` 概念废弃，代码级扩展统一为 Extension Unit：
+
+- **ServerUnit**：后端扩展单元——覆盖自定义算法、多对象复合操作、事件编排、流程触发、外部系统集成。四级实现（L1 表达式 → L2 沙箱脚本 → L3a 进程内插件 → L3b 独立子进程），接口与实现分离。受现实约束（无容器、离线部署、信创兼容），不使用 K8s/Docker，改为 JVM ClassLoader 隔离和进程级隔离。高频场景支持进程内直接调用，零网络开销。
+- **ClientUnit**：前端扩展单元——覆盖自定义展示组件、交互行为、编辑器。通过 `platform.execute()` 声明式调用 ServerUnit。
+
+**扩展机制统一模型：**
+
+| 概念 | 职责 | 一句话 |
+|---|---|---|
+| ExtensionPoint | WHERE — 哪里可以扩展 | 插座（UI 层 + 后端层） |
+| FED | WHAT — 扩展了什么 | 扩展记录（零代码 + 代码级引用 + orchestration 编排） |
+| Extension Unit | HOW — 用什么实现 | 电器（ServerUnit + ClientUnit） |
+| ConnectorGroup | INTEGRATE — 跟外部怎么连 | 集成声明 |
+
+**运行时约束（v0.6 新增）：**
+- 无容器：Level 3 使用 JVM ClassLoader 隔离（L3a 进程内插件）和独立子进程（L3b）替代 K8s 容器
+- 离线部署：ClientUnit Bundle 从本地制品仓库加载，不依赖外网 CDN
+- 进程内调用：高频 ServerUnit 支持嵌入领域服务 JVM 内直接调用
+- 分布式事务：同服务内用本地事务，跨服务用 Saga（Task Orchestration 协调），由 touchedObjects 声明自动选择
+- 信创兼容：基于毕昇/Kona JDK + Spring Boot + Vue 3，全栈纯 Java + 标准 Web 技术，支持鲲鹏/飞腾/龙芯 CPU 和国产 DB/中间件/浏览器
+
+**沙箱脚本引擎选型（待冻结）：**
+
+L2 沙箱脚本层的引擎选型当前为多方案并存状态，需通过 POC 验证后收敛为单一推荐方案：
+
+| 候选方案 | 优势 | 风险 | 信创兼容 |
+|---|---|---|---|
+| Nashorn（JDK 内置，JDK 15 后移除） | 零外部依赖、JVM 原生 | JDK 15+ 需额外引入、ECMAScript 5 限制 | 毕昇/Kona JDK 可用 |
+| GraalVM CE JavaScript | 高性能、ECMAScript 最新标准 | 信创 CPU（鲲鹏/飞腾/龙芯）支持需验证 | **待 POC 验证** |
+| Jython | Python 生态、工程师熟悉 | 性能偏低、Python 3 支持不完整 | 纯 JVM，信创可用 |
+
+收敛时间节点：Phase 0 标杆域 POC 阶段完成选型冻结。
+
+FED 支持 `orchestration` 声明，描述多个 Extension Unit 的链式编排关系，由 Task Orchestration Service 解释执行。支持 `unit`（自动步骤）和 `approval`（人工审批步骤）交替、`parallel` 并行、`loopGuard` 防循环。
+
+**编排职责边界澄清：**
+
+| 编排层 | 职责范围 | 不负责什么 |
+|---|---|---|
+| Task Orchestration | 业务活动编排、FED orchestration 声明的链式步骤调度 | 不执行工具运行时，遇到工具步骤时委派 Toolflow Orchestration |
+| Toolflow Orchestration | 工程工具步骤编排、运行依赖管理、工具版本绑定、回调收敛 | 不管业务活动状态和审批流程 |
+| Workflow Service | 人工审批子流程 | 不管业务活动编排和工具执行 |
+
+当 FED orchestration 中的某个 `unit` 步骤实质是工具调用（如 CAE 求解、数据采集脚本）时，Task Orchestration 负责发起委派，Toolflow Orchestration 负责执行和回调，Task Orchestration 根据回调结果推进后续步骤。两者通过明确的委派-回调接口协作，不存在职责交叉。
+
+## 4.7 平台⇄产品⇄项目双向流动
+
+自顶向下（逐级支撑）：
+- 平台提供引擎 + 组件 + 扩展点机制 → 产品团队构建标准能力包 → 客户在编辑态做差异化扩展
+- 每一层的承诺是下一层安全操作的前提
+
+自底向上（逐级积累）：
+- 客户编辑态产出 FED → 多项目相似 FED 被领域团队提炼为标准能力包 → 多领域相似模式被平台团队抽象为通用引擎/组件
+- 晋升条件：M2→M1 需 ≥2 项目验证 + 领域评审；M1→M0 需 ≥2 领域复现 + 平台接管维护
+- 代码级扩展（Extension Unit）与零代码扩展走同一条晋升路径
+
+**飞轮效应：** 每一个客户项目的 M2 定制，都在为平台未来能力做增量积累。项目越多 → FED 积累越丰富 → ITP 越完整 → 新客户交付越快 → 更多项目 → 更多积累。
+
+详细对象定义见统一对象模型 §13.5。
+
 ---
 
 ## 5. 服务蓝图
@@ -146,10 +298,11 @@
 
 | 层次 | 服务 | 说明 |
 | --- | --- | --- |
-| MVP Core | Identity、Master Data、Data Source Management、Object Model Registry、File/Object、Workflow、Task Orchestration、ACL Policy、Classification & Secrecy Policy、Crypto Policy、Meta-model Extension、Rule、Trace、Audit、Search、Integration Gateway、Config & Release、Industry Template Package、Tenant Bootstrap | 第一批必须具备的共享控制面和复制引擎最小闭环 |
+| MVP Core | Identity、Master Data、Data Source Management、Object Model Registry、File/Object、Workflow、Task Orchestration、ACL Policy、Classification & Secrecy Policy、Crypto Policy、Meta-model Extension、Rule、Trace、Graph Service、Audit、Search、Integration Gateway、Config & Release、Industry Template Package、Tenant Bootstrap | 第一批必须具备的共享控制面和复制引擎最小闭环。Graph Service 在 MVP 阶段提供统一查询接口（模型依赖分析、正向追踪、反向溯源），由 Trace Service 负责写入，Graph Service 负责读取与遍历 |
 | Wave 1 | Requirement、Architecture、Function/Logical/Physical Architecture、Interface Definition、Project、WorkPackage、Task Collaboration、Review & Change、Test Planning、Test Execution、DataSet、Analysis、Site & Device、Research Project、Contract、Approval、Model Automation | 第一轮业务闭环和纵切 A/B 主体 |
 | Wave 2 | Simulation Task、HPC Job Proxy、Result Package、Workbench Session、Toolflow Orchestration、CAD/CAE Runtime、Storage Tiering、TODS Model Registry、ATF/XML Exchange、Knowledge、Semantic Retrieval、Worker Executor | 工业特性深化与 HPC/知识增强 |
-| Deferred | Plugin Lifecycle、AI Assistant 高级能力、Advanced Dashboard、生态开放组件 | 不阻塞主线闭环 |
+| Wave 2+ | Extension Unit Lifecycle（ServerUnit 注册/沙箱/进程管理、ClientUnit 注册/加载）、FED 可视化编辑工作台 | 编辑态与代码级扩展的完整运行时基础设施。**前期过渡方案：** 在 Wave 2+ 交付前，扩展治理通过以下最小门禁实现——(1) FED 注册校验由 Config & Release Service 承载；(2) Extension Unit 以白名单方式手工注册，受 Meta-model Extension Service 管控；(3) DesignChangeset 的 Draft→影响分析→发布流程由 Config & Release Service 的最小发布管线支撑。Wave 2+ 交付后切换为完整的自动化运行时基础设施 |
+| Deferred | AI Assistant 高级能力、Advanced Dashboard、生态开放组件 | 不阻塞主线闭环 |
 
 ## 5.2 领域边界摘要
 
@@ -344,10 +497,11 @@
 
 详细依赖矩阵见 `industrial-base-implementation-slices-and-dependency-matrix-appendix-v0.5-2026-03-11.md`。
 
-1. `MVP Core`：先冻结共享控制面和复制引擎最小闭环
+1. `MVP Core`：先冻结共享控制面（含 Graph Service）和复制引擎最小闭环
 2. `Wave 1`：再完成 `Requirement + Architecture + Test/DataSet + Project/Contract` 两条业务主线
 3. `Wave 2`：补强 `HPC / Workbench / Knowledge / AI Worker`
-4. `Deferred`：生态开放和高级智能
+4. `Wave 2+`：交付 Extension Unit Lifecycle 和 FED 可视化编辑工作台的完整运行时基础设施（前期通过 Config & Release 最小门禁过渡，详见 §5.1）
+5. `Deferred`：生态开放和高级智能
 
 ---
 
@@ -376,6 +530,7 @@
 - Workflow
 - Rule
 - Trace
+- Graph Service（提供主线正向追踪、反向溯源和基础影响分析查询，由 Trace Service 写入）
 - Audit
 - Search
 - Config & Release
@@ -409,6 +564,7 @@
 - Config & Release
 - Audit
 - Search
+- Graph Service（提供模型依赖图谱查询和裁剪影响分析，由 Meta-model Extension / ITP Loader 负责投影生成）
 
 验收标准：
 
@@ -439,7 +595,8 @@
 | `§8` | `ADR-011`、`ADR-015` |
 | `§9` | `ADR-009`、`ADR-011`、`ADR-012` |
 | `§10` | `ADR-003`、`ADR-012`、`ADR-015`、`ADR-017` |
-| `§12-§13` | `ADR-006`、`ADR-010`、`ADR-014`、`ADR-017`、`ADR-020`、`ADR-021`、`ADR-023` |
+| `§4.4-§4.7` | `ADR-010`、`ADR-017`、`ADR-024` |
+| `§12-§13` | `ADR-006`、`ADR-010`、`ADR-014`、`ADR-017`、`ADR-020`、`ADR-021`、`ADR-023`、`ADR-024` |
 
 ## 14.2 证据链
 
@@ -462,18 +619,34 @@
 - `§10.2 治理组织最小运行规则`：缺少治理组织、决策权限和例外流程 ADR
 - `§11 运维与可观测性蓝图`：缺少可观测性责任模型和运维治理 ADR
 - `§12.1 技术资产兼容方向`：`ADR-023` 已补齐图服务逻辑统一/物理分治方向，但更广泛的技术选型 ADR 仍待补充
+- `§4.6 Extension Unit 运行时`：已有运行时约束设计，后续需补充信创环境的详细 POC 验证报告
 
 ---
 
 ## 15. 当前版本结论
 
-`v0.5` 与 `v0.4` 的差异不在于增加更多服务，而在于把原先“方向正确”的部分收敛成了可以直接用于实施的规则：
+本文档为 `v0.6 Draft`，在 `v0.5` 冻结基线上从”运行时架构”扩展到了”产品架构”，形成双维架构体系。两个版本的范围关系详见文档开头”版本范围说明”。
 
+**v0.5 已冻结的（运行时视角，对应 M-01 至 M-09）：**
 - 质量属性从目标口号变成了带指标的场景
 - 横切平面从概念描述变成了运行时契约
 - `TraceLink`、多存储和安全控制有了明确写入与执行责任
-- 图能力统一到 `Graph Service` 逻辑层，避免模型图与实例图形成两套查询和治理口径
+- 图能力统一到 `Graph Service` 逻辑层，Graph Service 正式纳入 MVP Core 波次
 - 优先级、批次、纵切和治理规则形成了同一口径
 - 非功能视图和证据链从缺席状态提升到最小可复核基线
 
-仍待后续版本继续深化的重点是更精细的容量数字、正式合规逐条映射和生态开放细则，但这些不再阻塞 `v0.5` 作为实施蓝图使用。
+**v0.6 新增的（产品与扩展视角，ADR-024 + 待补充 ADR）：**
+- 产品架构层次（P0-P5）与运行时逻辑分层（L1-L7）正交互补，解决了”资产谁定义、谁装配、谁扩展”
+- 引擎+Schema 混合 UI 架构（AD-24）支持编辑态，实现”运行即配置”的所见即所得体验
+- Extension Unit（ServerUnit/ClientUnit）替代原 plugins 概念，代码级扩展纳入 FED 统一管理体系
+- ExtensionPoint 从 UI 层扩展到后端层，统一”插座”机制覆盖前后端
+- FED 同时管理零代码扩展和代码级引用，支持 orchestration 链式编排
+- 平台⇄产品⇄项目双向流动模型和飞轮效应，保证项目积累反哺产品和平台
+- FED 防错四道防线（编写→提交→注册→发布）和可视化编辑工作台
+
+**v0.6 新增内容的待完成项：**
+- 沙箱脚本引擎选型需通过 Phase 0 POC 收敛为单一推荐方案
+- P0-P5 各层对象需补充独立验收标准和责任人
+- FED 可视化编辑工作台的 UX 细化
+- 扩展治理在 Wave 2+ 前的过渡门禁方案需在 Phase 0 实践中验证
+- 更精细的容量数字和正式合规逐条映射
