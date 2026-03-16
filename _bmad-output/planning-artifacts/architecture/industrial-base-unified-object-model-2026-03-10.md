@@ -1,8 +1,8 @@
 # 工业研发底座统一对象模型
 
-状态：`Draft v0.5`
-日期：`2026-03-15`
-变更说明：`v0.5` 新增 §13.5 UI Schema 与编辑态架构对象族，补充 ExtensionPoint、FeatureExtension、DesignChangeset、ComponentType 概念，与 AD-24 对齐。  
+状态：`Draft v0.6`
+日期：`2026-03-16`
+变更说明：`v0.6` 概念精简——CapabilityPack 并入 ITP、ViewTemplate 统一为 PageTemplate、DashboardView 并入 PageTemplate、FlowModel 改名 OrchestrationModel、新增 SolutionInstance（方案包）、降级 TemplateManifest/InitializationPlan/TemplateVariant。详见 2026-03-16 概念精简共识。
 用途：作为《工业研发底座架构设计与治理草案》和《统一能力地图》的下一层产物，用于定义底座统一语言、对象边界、聚合根、关键关系和治理规则。
 
 ---
@@ -355,9 +355,8 @@
 |---|---|---|
 | `MetaObjectType` | 是 | 对象类型定义 |
 | `SchemaVersion` | 是 | 模型版本定义 |
-| `IndustryTemplatePackage` | 是 | 行业模板交付包 |
-| `TemplateManifest` | 否 | 模板包清单与依赖声明 |
-| `InitializationPlan` | 是 | 租户/项目初始化计划与执行记录 |
+| `IndustryTemplatePackage` | 是 | 行业模板交付包（ITP），既是逻辑上的能力交付单元，也是物理上的可安装包。原 CapabilityPack 概念已并入 |
+| `SolutionInstance` | 是 | 项目级方案装配结果——基线 + 已安装 ITP + M2 差量（FED）+ 连接器绑定。支持 clone（快速复制）和 promoteToITP（标准化晋升）|
 | `PersistenceProfile` | 是 | 对象持久化路由与存储策略档案 |
 | `AutomationRegistration` | 是 | 模型发布后的自动联动注册对象 |
 | `ModelExtensionRequest` | 是 | 模型扩展申请与审批对象 |
@@ -365,8 +364,7 @@
 | `WorkflowInstance` | 是 | 流程实例 |
 | `ActionItem` | 是 | 待办、动作项 |
 | `RuleSet` | 是 | 规则集 |
-| `ViewTemplate` | 是 | 表单、页面、视图模板 |
-| `DashboardView` | 是 | 看板与驾驶舱配置对象 |
+| `PageTemplate` | 是 | 页面模板（含 type=shell 骨架、type=dashboard 看板等变体）。原 ViewTemplate 和 DashboardView 已统一并入 |
 | `AIWorkerTask` | 是 | AI Worker 执行节点对象 |
 | `PromptVersion` | 是 | 提示词版本对象 |
 | `KnowledgeSourceRef` | 否 | AI 任务引用的知识来源 |
@@ -382,7 +380,7 @@
 - `MetaObjectType` 发布后不得裸生效，必须经过 `ReleasePackage / IndustryTemplatePackage` 链路。
 - `SchemaVersion` 变更必须驱动 `AutomationRegistration` 更新搜索、审计、权限点和基础视图。
 - `PersistenceProfile` 决定对象采用稳定关系模型还是 JSON/文档混合模型。
-- `IndustryTemplatePackage` 必须与 `Tenant / InitializationPlan / SchemaVersion` 建立可追溯关联。
+- `IndustryTemplatePackage` 必须与 `Tenant / SchemaVersion` 建立可追溯关联。ITP 安装流程（原 InitializationPlan）作为 ITP 安装的内部步骤，不再作为独立顶层对象；依赖声明（原 TemplateManifest）降级为 ITP 包内属性段。
 
 ### 为什么 `TraceLink` 要单独建模
 
@@ -514,7 +512,7 @@
 
 ## 11.2 版本规则
 
-- `Requirement / Deliverable / DataSet / TestSpec / KnowledgeAsset / WorkflowTemplate / ViewTemplate / DashboardView` 必须版本化。
+- `Requirement / Deliverable / DataSet / TestSpec / KnowledgeAsset / WorkflowTemplate / PageTemplate` 必须版本化。
 - `Project / WorkPackage / Task` 是否版本化取决于业务复杂度，但至少应支持关键变更快照。
 
 ## 11.3 基线规则
@@ -622,8 +620,7 @@
 - `EquipmentAsset`
 - `KnowledgeAsset`
 - `WorkflowTemplate`
-- `ViewTemplate`
-- `DashboardView`
+- `PageTemplate`
 
 不建议开放低代码重定义的对象：
 
@@ -637,41 +634,43 @@
 - `TraceLink`
 - `Policy`
 
-## 13.4 UI 模板资产家族
+## 13.4 PageTemplate 家族（UI 模板资产）
 
-建议把 `Page 04` 涉及的页面、工作台、列表、表单、查询区、图表区、抽屉、弹窗统一纳入 `ViewTemplate` 家族管理。  
-这里**不单独引入“投影层对象”**，字段是否出现在 UI、以什么方式出现，直接由 UI 模板中的字段绑定定义。
+> **术语变更说明（v0.6）：** 原 `ViewTemplate` 统一更名为 `PageTemplate`；原 `DashboardView` 并入 `PageTemplate (type=dashboard)`；原 `ViewShellTemplate` 降级为 `PageTemplate (type=shell)`。
+
+把 `Page 04` 涉及的页面、工作台、列表、表单、查询区、图表区、抽屉、弹窗统一纳入 `PageTemplate` 家族管理。
+这里**不单独引入”投影层对象”**，字段是否出现在 UI、以什么方式出现，直接由 UI 模板中的字段绑定定义。
 
 ### 13.4.1 建模边界
 
 - 领域模型只负责业务语义，不负责 UI 布局。
-- `ViewTemplate` 负责“长什么样、字段放哪里、动作怎么触发”。
+- `PageTemplate` 负责”长什么样、字段放哪里、动作怎么触发”。
 - 字段新增后默认不进入任何模板，必须由设计器显式勾选、拖入或绑定。
-- 同一领域对象允许按阶段、角色、任务类型维护多套模板变体。
-- 图表、查询区、列表和表单统一视为 `ViewTemplate` 的部件，不再分裂为独立配置体系。
-- `DashboardView` 可保留为发布后的运行态看板对象，但建模期应统一由 `ViewTemplate` 编排。
+- 同一领域对象允许按阶段、角色、任务类型维护多套模板变体（TemplateVariant，P4 构件层子概念）。
+- 图表、查询区、列表、表单和看板统一视为 `PageTemplate` 的不同 `templateType`，不再分裂为独立配置体系。
 
 ### 13.4.2 对象族
 
 | 对象/概念 | 层级 | 说明 | 核心属性 |
 |---|---|---|---|
-| `ViewTemplate` | 根对象 | 一套完整 UI 模板，绑定一个主领域对象，可组合多个区域、容器、组件和动作 | `id/code`、`name`、`primaryObjectRef`、`templateKind`、`shellRef`、`schemaVersionRef`、`parentTemplateRef`、`status/version` |
-| `ViewShellTemplate` | 可复用骨架 | 页面壳模板，定义工作台的主区域和承载边界 | `shellType`、`regions`、`layoutTokens`、`allowedNodeTypes` |
+| `PageTemplate` | P3 资产（根对象） | 一套完整 UI 模板，绑定一个主领域对象，可组合多个区域、容器、组件和动作。通过 `templateType` 区分页面、骨架、看板等变体 | `id/code`、`name`、`templateType(page/shell/dashboard)`、`primaryObjectRef`、`shellRef`、`schemaVersionRef`、`parentTemplateRef`、`status/version` |
 | `ContainerNode` | 模板子节点 | 结构容器，承载布局与嵌套关系 | `containerType(split/tabs/stack/group/drawer/modal)`、`region`、`children`、`props` |
 | `WidgetNode` | 模板子节点 | 业务组件，直接承载字段与数据视图 | `widgetType(tree/table/form/query/detail/chart/timeline)`、`dataSourceRef`、`props` |
-| `FieldBinding` | 节点内绑定 | 把领域字段绑定到表格列、表单项、筛选项、图表维度/指标等 UI 位置 | `fieldRef`、`usage`、`label`、`required`、`readonly`、`defaultValue`、`validators`、`sort/filter/aggregate` |
-| `TemplateVariant` | 模板变体 | 面向阶段、角色、任务类型的视图变体入口 | `variantKey`、`stageRef`、`roleRef`、`taskTypeRef`、`priority`、`activationCondition` |
-| `TemplatePatch` | 结构化差量 | 基于父模板做局部覆盖，不复制整套模板 | `patchOps(add/update/remove/move)`、`targetPath`、`payload`、`reason` |
-| `ActionBinding` | 行为绑定 | 把按钮、菜单、行操作、图表点击等交互连接到动作模板/命令 | `triggerRef`、`actionTemplateRef`、`commandRef`、`targetSurface`、`successFlow`、`failureFlow` |
-| `ContextFieldMapping` | 动作映射 | 指定动作从当前页、当前行、当前表单或当前上下文读取哪些字段 | `sourceScope`、`fieldRef`、`paramName`、`required`、`transform` |
+| `FieldBinding` | P4 构件 | 把领域字段绑定到表格列、表单项、筛选项、图表维度/指标等 UI 位置 | `fieldRef`、`usage`、`label`、`required`、`readonly`、`defaultValue`、`validators`、`sort/filter/aggregate` |
+| `TemplateVariant` | P4 构件（子概念） | 面向阶段、角色、任务类型的视图变体入口 | `variantKey`、`stageRef`、`roleRef`、`taskTypeRef`、`priority`、`activationCondition` |
+| `TemplatePatch` | P4 构件 | 基于父模板做局部覆盖，不复制整套模板 | `patchOps(add/update/remove/move)`、`targetPath`、`payload`、`reason` |
+| `ActionBinding` | P4 构件 | 把按钮、菜单、行操作、图表点击等交互连接到动作模板/命令 | `triggerRef`、`actionTemplateRef`、`commandRef`、`targetSurface`、`successFlow`、`failureFlow` |
+| `ContextFieldMapping` | P4 构件 | 指定动作从当前页、当前行、当前表单或当前上下文读取哪些字段 | `sourceScope`、`fieldRef`、`paramName`、`required`、`transform` |
+
+> **已废弃概念：** `ViewTemplate`（→ `PageTemplate`）、`ViewShellTemplate`（→ `PageTemplate type=shell`）、`DashboardView`（→ `PageTemplate type=dashboard`）。
 
 ### 13.4.3 关键关系
 
-- 一个 `ViewTemplate` 必须绑定一个 `primaryObjectRef`，作为主字段面板来源。
+- 一个 `PageTemplate` 必须绑定一个 `primaryObjectRef`，作为主字段面板来源。
 - `WidgetNode.dataSourceRef` 可以引用主对象、关联对象路径、聚合结果或图表数据源。
 - `FieldBinding` 直接挂在 `WidgetNode` 下，不额外抽象为中间投影层。
 - `TemplateVariant` 通过命中条件选择对应模板入口；命中后再叠加 `TemplatePatch`。
-- `ActionBinding` 可以引用 `ActionTemplate / RuleSet / WorkflowTemplate`，但动作入口仍归属于视图模板。
+- `ActionBinding` 可以引用 `ActionTemplate / RuleSet / WorkflowTemplate`，但动作入口仍归属于页面模板。
 - `ContextFieldMapping` 必须引用当前模板已绑定字段或运行时上下文，不允许引用未注册字段。
 
 ### 13.4.4 继承与局部覆盖
@@ -749,7 +748,7 @@ viewTemplate:
 
 ## 13.5 UI Schema 与编辑态架构对象族
 
-`v0.4` 的 §13.4 定义了 `ViewTemplate` 家族，解决了"页面长什么样、字段放哪里、动作怎么触发"。
+`v0.4` 的 §13.4 定义了 UI 模板家族（现已统一为 `PageTemplate`），解决了"页面长什么样、字段放哪里、动作怎么触发"。
 `v0.5` 在此基础上补充编辑态（Design Mode）的架构对象，支持 NocoBase 式原地编辑范式。
 
 ### 13.5.1 架构背景：引擎 + Schema 混合模式（AD-24）
@@ -912,11 +911,13 @@ featureExtension:
 |---|---|---|
 | `independent` | 无 extensionPoints 依赖 && 无 external actions && 无 crossObject | 可独立分发 |
 | `module-bound` | 所有依赖属于同一模块 | 需绑定模块 |
-| `pack-bound` | 依赖跨越多个模块 | 需绑定能力包 |
+| `pack-bound` | 依赖跨越多个模块 | 需绑定 ITP |
 
-### 13.5.9 能力包的 FED 控制机制
+### 13.5.9 ITP 的 FED 控制机制
 
-能力包（`CapabilityPack`）新增 FED 相关声明：
+> **术语变更说明（v0.6）：** 原 CapabilityPack（能力包）概念已并入 ITP。ITP 既是逻辑上的能力交付单元，也是物理上的可安装包。
+
+ITP 包含 FED 相关声明：
 
 | 属性 | 说明 |
 |---|---|
@@ -926,7 +927,7 @@ featureExtension:
 | `orchestrationModule` | 包级编排模块——承载跨模块总览页、汇总页 |
 
 ```yaml
-capabilityPack:
+itp:
   name: project-performance-pack
   modules:
     - ref: work-package-center
@@ -944,15 +945,15 @@ capabilityPack:
     pages: [cross-module-performance-dashboard]
 ```
 
-**跨模块 FED 的处理原则：** 不做"一个 FED 跨多个模块"，而是拆成多个协作 FED，由能力包的 `fedCoordination` 声明启用约束。
+**跨模块 FED 的处理原则：** 不做"一个 FED 跨多个模块"，而是拆成多个协作 FED，由 ITP 的 `fedCoordination` 声明启用约束。
 
 ### 13.5.10 包级编排模块
 
 03-13 讨论提出、03-15 讨论正式纳入的概念。
 
-- 定位：P1 能力包层的标准概念
+- 定位：P1 ITP 层的标准概念
 - 职责：承载跨模块的总览页、汇总页、装配页和包级协调对象
-- 归属：属于能力包，不属于任何单一模块
+- 归属：属于 ITP，不属于任何单一模块
 - 典型场景：项目绩效总览（汇总工作包中心和项目总览两个模块的绩效数据）
 
 ### 13.5.11 FED 晋升治理
@@ -972,12 +973,15 @@ capabilityPack:
 
 ### 13.5.12 完整层次结构总览（P0-P5）
 
+> **术语变更说明（v0.6）：** P1 层由"能力包层"更名为"ITP 层"（CapabilityPack 并入 ITP）；P3 层 DomainObject 改为 MetaObjectType/SchemaVersion、FlowModel 改为 OrchestrationModel；SolutionInstance（方案包）作为 P0 的项目级实例化产物新增。
+
 | 层级 | 名称 | 定位 | 核心对象 |
 |---|---|---|---|
 | P0 | 产品基线层 | 产品族顶层锚点 | ProductBaseline, ProductVariant |
-| P1 | 能力包层 | 装配/交付层 | CapabilityPack, OrchestrationModule |
+| — | 方案包（项目级） | P0 的项目实例化 | SolutionInstance（= 基线 + ITP + M2 FED + 连接器） |
+| P1 | ITP 层 | 装配/交付层 | ITP (IndustryTemplatePackage), OrchestrationModule |
 | P2 | 模块层 | 内部构件层 | CapabilityModule |
-| P3 | 资产层 | 模块的内容物 | PageTemplate, ActionModel, DomainObject, FlowModel, RuleSet, ConnectorGroup, FeatureExtension |
+| P3 | 资产层 | 模块的内容物 | PageTemplate, ActionModel, MetaObjectType/SchemaVersion, OrchestrationModel, RuleSet, ConnectorGroup, FeatureExtension |
 | P4 | 构件层 | 资产的内部结构 | ExtensionPoint, FieldBinding, ActionBinding, ContextFieldMapping, TemplatePatch, TemplateVariant, DesignChangeset |
 | P5 | 引擎与组件层 | 平台能力基座 | Engine, CapabilityComponent, DisplayComponent, FieldType, ServerUnit, ClientUnit |
 
@@ -1041,8 +1045,8 @@ capabilityPack:
 
 **后端层——每种资产类型自动提供：**
 - `ActionModel`: pre / validate / compute / post / error
-- `FlowModel`: event.{name}.handler / gateway.{name}.decide / transition.{name}.guard
-- `DomainObject`: onCreate.pre/post / onUpdate.pre/post / onStatusChange.pre/post / onDelete.pre/post
+- `OrchestrationModel`: event.{name}.handler / gateway.{name}.decide / transition.{name}.guard
+- `MetaObjectType`: onCreate.pre/post / onUpdate.pre/post / onStatusChange.pre/post / onDelete.pre/post
 
 **M1 暴露控制（Exposure Policy）：**
 
@@ -1099,7 +1103,7 @@ capabilityModule:
 
 #### 声明式能力 vs Extension Unit 的边界
 
-声明式能力（RuleSet / FlowModel / ActionModel / Workflow）覆盖标准模式。Extension Unit 覆盖超出标准模式的业务逻辑（非标算法、跨聚合根事务、商业软件调用、非标 UI 交互）。
+声明式能力（RuleSet / OrchestrationModel / ActionModel / Workflow）覆盖标准模式。Extension Unit 覆盖超出标准模式的业务逻辑（非标算法、跨聚合根事务、商业软件调用、非标 UI 交互）。
 
 **代码级扩展是声明式能力的试验场：** 当一个 ServerUnit 被足够多领域使用后，平台团队可将其吸收为声明式能力的新标准模式。
 
@@ -1120,15 +1124,64 @@ capabilityModule:
 
 ### 13.5.15 与 §13.4 的关系
 
-§13.4 定义的 `ViewTemplate` 家族仍然有效，§13.5 是在其基础上的**增量补充**：
+§13.4 定义的 `PageTemplate` 家族仍然有效，§13.5 是在其基础上的**增量补充**：
 
 | §13.4 概念 | §13.5 演进 |
 |---|---|
-| `ViewTemplate` | 增加 `uiSchema` 和 `extensionPoints` 结构 |
+| `PageTemplate` | 增加 `uiSchema` 和 `extensionPoints` 结构 |
 | `ContainerNode` / `WidgetNode` | 对应 UI Schema 中的节点，`type` 字段引用 `ComponentType` |
 | `FieldBinding` | 不变，仍由 UI Schema 中的 `fieldBindings` 承载 |
 | `TemplatePatch` | 与 `DesignChangeset` 形成互补：`TemplatePatch` 是静态差量，`DesignChangeset` 是编辑态产出 |
 | `ActionBinding` | 不变，可通过编辑态的 `ExtensionPoint(action-list)` 扩展 |
+
+### 13.6 SolutionInstance（方案包）
+
+> **v0.6 新增概念。** SolutionInstance 是 P0 ProductBaseline 在具体客户项目上的实例化产物，描述"为某个客户装配了什么、定制了什么"。
+
+#### 13.6.1 定义
+
+SolutionInstance 是**项目级装配结果**，不是产品架构层级（不在 P0-P5 之内），而是 P0 的运行时绑定态快照。
+
+#### 13.6.2 核心属性
+
+| 属性 | 说明 |
+|---|---|
+| `id / code / name` | 方案包身份标识 |
+| `baselineRef` | 关联的 ProductBaseline (P0)，如 OLTran.CDM v1.0 |
+| `installedITPs[]` | 已安装的 ITP 列表及版本 |
+| `appliedFEDs[]` | 已应用的 M2 FED 列表 |
+| `connectorBindings[]` | 外部系统连接器绑定 |
+| `deploymentConfig` | 部署参数（租户、环境、网络区域等） |
+| `status` | `draft / staging / published / archived` |
+| `version` | SemVer 版本号 |
+
+#### 13.6.3 核心操作
+
+| 操作 | 说明 | 适用场景 |
+|---|---|---|
+| `clone()` | 复制全部配置（含 M2 FED）到新的 SolutionInstance，新实例独立演进 | 类似客户快速交付（快路径） |
+| `promoteToITP()` | 选择 M2 FED → 经产品团队评审 → 晋升为 M1 标准 → 打包为 ITP 新版本 | 产品能力沉淀（慢路径） |
+
+#### 13.6.4 与 ITP 的关系
+
+```text
+ITP（产品模板包，M1 标准）
+ │
+ │  安装 ↓         ↑ promoteToITP（M2→M1 晋升）
+ │
+SolutionInstance（方案包，项目级）
+ │  = baselineRef + installedITPs + appliedFEDs + connectorBindings
+ │
+ │  clone ↓
+ │
+SolutionInstance（另一个客户的方案包）
+```
+
+**两条复用路径：**
+- **标准化复用（慢路径）：** M2 FED → 晋升 M1 → 更新 ITP → 分发给所有客户
+- **快速克隆（快路径）：** SolutionInstance.clone() → 调整差异 → 新客户上线
+
+ITP 导出是**产品管理活动**（在产品管理环境中操作），方案包克隆是**项目交付活动**（在实施环境中操作）。
 
 ---
 
@@ -1164,7 +1217,7 @@ capabilityModule:
 - MetaObjectType
 - SchemaVersion
 - IndustryTemplatePackage
-- InitializationPlan
+- SolutionInstance
 - WorkflowInstance
 - Baseline
 - TraceLink
